@@ -1,9 +1,8 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
-import CustomerDashboard from './pages/CustomerDashboard';
+import CustomerDashboard from './pages/Customer/CustomerDashboard'
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import ServiceCenterDashboard from './pages/ServiceCenterDashboard';
-import Header from './components/Header';
 import HeroSection from './components/homepageComp/HeroSection';
 import ServicesSection from './components/homepageComp/ServicesSection';
 import HowItWorksSection from './components/homepageComp/HowItWorksSection';
@@ -11,7 +10,7 @@ import Footer from './components/footer';
 import BookingForm from './components/CustomerComponent/BookingForm';
 import Tracking from './components/CustomerComponent/RepairTrackingPage';
 import Homeheader from './components/homepageComp/HomeHeader';
-
+import EditBookingForm from './components/CustomerComponent/EditBookingForm';
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -48,6 +47,7 @@ function App() {
         
         <Route path='/booking-form' element={<BookingForm />} />
         <Route path='/tracking' element={<Tracking />} />
+        <Route path="/edit-booking/:id" element={<EditBookingForm />} />
 
       </Routes>
     </Router>

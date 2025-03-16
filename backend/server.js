@@ -10,7 +10,7 @@ const app = express();
 
 app.use(cors({
   origin: 'http://localhost:5173', // Matches Vite frontend
-  methods: ['GET', 'POST', 'OPTIONS'], // Added OPTIONS for preflight
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Added OPTIONS for preflight
   credentials: true,
 }));
 app.use(express.json());

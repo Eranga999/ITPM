@@ -8,7 +8,7 @@ function HomeHeader() {
   const navigate = useNavigate();
 
   const handlebook = () => {
-    console.log("Book a Repair button clicked"); // Debug log
+    console.log("Book a Repair button clicked"); 
     navigate('/booking-form'); // Matches App.jsx route
   };
 
