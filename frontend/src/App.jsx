@@ -7,20 +7,20 @@ import Header from './components/Header';
 import HeroSection from './components/homepageComp/HeroSection';
 import ServicesSection from './components/homepageComp/ServicesSection';
 import HowItWorksSection from './components/homepageComp/HowItWorksSection';
-import homeheader from './components/homepageComp/HomeHeader';
 import Footer from './components/footer';
 import BookingForm from './components/CustomerComponent/BookingForm';
 import Tracking from './components/CustomerComponent/RepairTrackingPage';
+import Homeheader from './components/homepageComp/HomeHeader';
 
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      <Header />
+     <Homeheader/>
       <HeroSection />
       <ServicesSection />
       <HowItWorksSection />
       <Footer />
-      <homeheader/>
+      
 
     </div>
   );

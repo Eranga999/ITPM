@@ -25,9 +25,7 @@ function Header() {
               </svg>
               <span>Account</span>
             </Link >
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-md">
-              Book Now
-            </button>
+      
           </nav>
           
           {/* Mobile menu button */}
@@ -49,13 +47,11 @@ function Header() {
         {isMenuOpen && (
           <nav className="mt-4 md:hidden pb-4 space-y-3">
             <Link to="/" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Home</Link>
-            <Link to="/book" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Book Repair</Link>
-            <Link to="/track" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Track Order</Link>
+            <Link to="/booking-form" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Book Repair</Link>
+            <Link to="/tracking" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Track Order</Link>
             <Link to="/support" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Support</Link>
             <Link to="/profile" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Account</Link>
-            <button className="w-full mt-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-md">
-              Book Now
-            </button>
+
           </nav>
         )}
       </div>
