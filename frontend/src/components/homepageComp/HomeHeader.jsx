@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
-function Header() {
+function HomeHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
  
   const navigate = useNavigate();
@@ -70,4 +70,4 @@ function Header() {
   );
 }
 
-export default Header;
+export default HomeHeader;

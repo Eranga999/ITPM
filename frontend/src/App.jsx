@@ -7,7 +7,7 @@ import Header from './components/Header';
 import HeroSection from './components/homepageComp/HeroSection';
 import ServicesSection from './components/homepageComp/ServicesSection';
 import HowItWorksSection from './components/homepageComp/HowItWorksSection';
-import homeheader from './components/homepageComp/homeheader';
+import homeheader from './components/homepageComp/HomeHeader';
 import Footer from './components/footer';
 import BookingForm from './components/CustomerComponent/BookingForm';
 import Tracking from './components/CustomerComponent/RepairTrackingPage';
