@@ -15,6 +15,11 @@ import PendingJobs from './pages/Technician/PendingJobs';
 import UrgentRepairs from './pages/Technician/UrgentRepairs';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ServiceCenters from './pages/Admin/AdminServiceCenters';
+import Technicians from './pages/Admin/AdminTechnicians';
+import RepairRequests from './pages/Admin/AdminRepairRequests';
+import Transport from './pages/Admin/AdminTransport';
+import Payments from './pages/Admin/AdminPayments';
+
 
 
 function HomePage() {
@@ -53,8 +58,15 @@ function App() {
         <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
         <Route path="/technician-dashboard/pending-jobs" element={<PendingJobs />} />
         <Route path="/technician-dashboard/urgent-repairs" element={<UrgentRepairs />} />
+
+
         <Route path="/admin-dashboard" element={< AdminDashboard/>} />
         <Route path="/admin-dashboard/service-centers" element={<ServiceCenters />} />
+        <Route path="/admin-dashboard/technicians" element={<Technicians />} />
+        <Route path="/admin-dashboard/repair-requests" element={<RepairRequests />} />
+        <Route path="/admin-dashboard/transport" element={<Transport />} />
+        <Route path="/admin-dashboard/payments" element={<Payments />} />
+       
 
       </Routes>
     </Router>
