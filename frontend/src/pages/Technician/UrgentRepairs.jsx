@@ -1,6 +1,6 @@
 // src/pages/Technician/UrgentRepairs.jsx
 import React from 'react';
-import Sidebar from '../../components/Sidebar';
+import Sidebar from '../../components/TechnicianSidebar';
 
 const UrgentRepairs = () => {
   const urgentJobs = [
