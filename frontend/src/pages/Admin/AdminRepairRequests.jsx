@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const RepairRequests = () => {
@@ -9,25 +9,42 @@ const RepairRequests = () => {
     navigate("/");
   };
 
-  // Static data for repair requests (replace with API call if needed)
-  const repairRequests = [
-    {
-      customer: "Alice Brown",
-      appliance: "Air Conditioner",
-      issue: "Not cooling",
-      status: "Pending Admin Review",
-      serviceCenter: "-",
-      dates: "2024-03-15",
-    },
-    {
-      customer: "Bob Wilson",
-      appliance: "Refrigerator",
-      issue: "Strange noise",
-      status: "At Service Center",
-      serviceCenter: "Downtown Repair Center",
-      dates: "2024-03-14",
-    },
-  ];
+  const [repairRequests, setRepairRequests] = useState([]);
+  const [error, setError] = useState(null);
+
+  const handleAddTestBooking = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/admin/api/add-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error("Failed to add test booking");
+      const newBooking = await response.json();
+      setRepairRequests((prev) => [
+        ...prev,
+        {
+          _id: newBooking._id,
+          customer: newBooking.name,
+          appliance: newBooking.serviceType,
+          issue: newBooking.description || "No description provided",
+          status:
+            newBooking.status === "pending"
+              ? "Pending Admin Review"
+              : newBooking.status === "confirmed"
+              ? "At Service Center"
+              : newBooking.status,
+          serviceCenter: newBooking.technicianAssigned ? "Assigned" : "-",
+          dates: new Date(newBooking.preferredDate).toISOString().split("T")[0],
+        },
+      ]);
+      console.log("Test booking added:", newBooking);
+    } catch (err) {
+      console.error("Error adding test booking:", err.message);
+      setError(err.message);
+    }
+  };
+
+  if (error) return <div className="p-8 text-center text-red-600">Error: {error}</div>;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -127,20 +144,12 @@ const RepairRequests = () => {
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Repair Requests</h1>
           <div className="flex items-center space-x-4">
-            {/* Status Filter Dropdown */}
-            <select
-              className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
-              defaultValue="All Status"
+            <button
+              onClick={handleAddTestBooking}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
             >
-              <option value="All Status">All Status</option>
-              <option value="Pending Admin Review">Pending Admin Review</option>
-              <option value="At Service Center">At Service Center</option>
-              {/* Add more status options as needed */}
-            </select>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-              Export Report
+              Add Test Booking
             </button>
-            <div className="text-gray-600 cursor-pointer">👤 Profile</div>
           </div>
         </header>
 
@@ -159,8 +168,8 @@ const RepairRequests = () => {
               </tr>
             </thead>
             <tbody>
-              {repairRequests.map((request, index) => (
-                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
+              {repairRequests.map((request) => (
+                <tr key={request._id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="py-4 px-6">{request.customer}</td>
                   <td className="py-4 px-6">{request.appliance}</td>
                   <td className="py-4 px-6">{request.issue}</td>
@@ -181,13 +190,9 @@ const RepairRequests = () => {
                   <td className="py-4 px-6">{request.dates}</td>
                   <td className="py-4 px-6 flex space-x-2">
                     {request.status === "Pending Admin Review" ? (
-                      <button className="text-blue-600 hover:underline">
-                        Send to Center
-                      </button>
+                      <button className="text-blue-600 hover:underline">Send to Center</button>
                     ) : (
-                      <button className="text-blue-600 hover:underline">
-                        View Details
-                      </button>
+                      <button className="text-blue-600 hover:underline">View Details</button>
                     )}
                     <button className="text-red-600 hover:underline">Cancel</button>
                   </td>
