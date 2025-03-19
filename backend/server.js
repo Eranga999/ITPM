@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import bookingRoutes from './routes/bookingRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import technicianRoutes from './routes/technicianRoutes.js'; // New import
+import serviceCenterRoutes from './routes/serviceCenterRoutes.js'
 
 
 dotenv.config();
@@ -32,7 +33,8 @@ mongoose
 
 app.use('/api', bookingRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin', technicianRoutes); // Mount technician routes under /api/admin
+app.use('/api/admin', technicianRoutes);
+app.use('/api/admin', serviceCenterRoutes); // Mount technician routes under /api/admin
 
 app.get('/', (req, res) => {
   res.send('Easy Fix Backend Running!');
