@@ -10,6 +10,13 @@ const PendingJobs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTransportModalOpen, setIsTransportModalOpen] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState(null);
+  const [serviceCenters, setServiceCenters] = useState([]);
+  const [transportFormData, setTransportFormData] = useState({
+    serviceCenter: '',
+    notes: '',
+  });
   const [formData, setFormData] = useState({
     customerName: '',
     appliance: '',
@@ -24,9 +31,9 @@ const PendingJobs = () => {
 
   const fetchPendingJobs = async () => {
     try {
-      console.log('Fetching pending jobs');
+      console.log('Fetching pending and in-progress jobs');
       const response = await axios.get('http://localhost:5000/api/technician/jobs', {
-        params: { technicianId, status: 'Pending' },
+        params: { technicianId, status: { $in: ['Pending', 'In Progress'] } },
       });
       setJobs(response.data.data);
       setLoading(false);
@@ -34,6 +41,17 @@ const PendingJobs = () => {
       console.error('Fetch error:', err.response ? err.response.data : err.message);
       setError('Failed to load pending jobs: ' + (err.response?.data?.message || err.message));
       setLoading(false);
+    }
+  };
+
+  const fetchServiceCenters = async () => {
+    try {
+      console.log('Fetching service centers');
+      const response = await axios.get('http://localhost:5000/api/admin/service-centers');
+      setServiceCenters(response.data.data);
+    } catch (err) {
+      console.error('Fetch service centers error:', err.response ? err.response.data : err.message);
+      setError('Failed to load service centers: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -53,9 +71,31 @@ const PendingJobs = () => {
     });
   };
 
+  const handleOpenTransportModal = (jobId) => {
+    setCurrentJobId(jobId);
+    setIsTransportModalOpen(true);
+  };
+
+  const handleCloseTransportModal = () => {
+    setIsTransportModalOpen(false);
+    setCurrentJobId(null);
+    setTransportFormData({
+      serviceCenter: '',
+      notes: '',
+    });
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleTransportInputChange = (e) => {
+    const { name, value } = e.target;
+    setTransportFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
@@ -88,9 +128,44 @@ const PendingJobs = () => {
       });
       console.log('Start Job Response:', response.data);
       fetchPendingJobs(); // Refresh the list
+      // Open the transport request modal after starting the job
+      handleOpenTransportModal(id);
     } catch (err) {
       console.error('Start job error:', err.response ? err.response.data : err.message);
       setError('Failed to start job: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleRequestTransport = async (e) => {
+    e.preventDefault();
+    try {
+      console.log('Submitting transport request:', transportFormData);
+      const transportData = {
+        job: currentJobId,
+        technician: technicianId,
+        serviceCenter: transportFormData.serviceCenter,
+        notes: transportFormData.notes,
+      };
+      const response = await axios.post('http://localhost:5000/api/transport/request', transportData);
+      console.log('Transport Request Response:', response.data);
+      handleCloseTransportModal();
+    } catch (err) {
+      console.error('Transport request error:', err.response ? err.response.data : err.message);
+      setError('Failed to request transport: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleCompleteJob = async (id) => {
+    try {
+      console.log('Completing job:', id);
+      const response = await axios.put(`http://localhost:5000/api/technician/jobs/${id}`, {
+        status: 'Completed',
+      });
+      console.log('Complete Job Response:', response.data);
+      fetchPendingJobs(); // Refresh the list
+    } catch (err) {
+      console.error('Complete job error:', err.response ? err.response.data : err.message);
+      setError('Failed to complete job: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -110,6 +185,7 @@ const PendingJobs = () => {
 
   useEffect(() => {
     fetchPendingJobs();
+    fetchServiceCenters();
   }, []);
 
   if (loading) return <div>Loading...</div>;
@@ -130,7 +206,7 @@ const PendingJobs = () => {
         </header>
         <div className="space-y-6">
           {jobs.length === 0 ? (
-            <p className="text-gray-600">No pending jobs available.</p>
+            <p className="text-gray-600">No pending or in-progress jobs available.</p>
           ) : (
             jobs.map((job) => (
               <div key={job._id} className="bg-white p-6 rounded-lg shadow-md">
@@ -154,14 +230,32 @@ const PendingJobs = () => {
                     >
                       {job.urgency} Priority
                     </span>
+                    <span
+                      className={`inline-block mt-2 ml-2 px-3 py-1 text-sm rounded-full ${
+                        job.status === 'In Progress'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {job.status}
+                    </span>
                   </div>
                   <div className="flex space-x-3">
-                    <button
-                      onClick={() => handleStartJob(job._id)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-                    >
-                      Start Job
-                    </button>
+                    {job.status === 'Pending' ? (
+                      <button
+                        onClick={() => handleStartJob(job._id)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+                      >
+                        Start Job
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleCompleteJob(job._id)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition"
+                      >
+                        Complete Job
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDeleteJob(job._id)}
                       className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
@@ -175,6 +269,7 @@ const PendingJobs = () => {
           )}
         </div>
 
+        {/* Add Job Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -283,6 +378,69 @@ const PendingJobs = () => {
                     className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
                   >
                     Add Job
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Transport Request Modal */}
+        {isTransportModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Request Transport</h2>
+              <p className="text-gray-600 mb-4">
+                Do you need to transport the item to a service center because it cannot be fixed on-site?
+              </p>
+              <form onSubmit={handleRequestTransport}>
+                <div className="mb-4">
+                  <label htmlFor="serviceCenter" className="block text-gray-700 mb-1">
+                    Select Service Center
+                  </label>
+                  <select
+                    id="serviceCenter"
+                    name="serviceCenter"
+                    value={transportFormData.serviceCenter}
+                    onChange={handleTransportInputChange}
+                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select a service center</option>
+                    {serviceCenters.map((center) => (
+                      <option key={center._id} value={center._id}>
+                        {center.name} - {center.location}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label htmlFor="notes" className="block text-gray-700 mb-1">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    value={transportFormData.notes}
+                    onChange={handleTransportInputChange}
+                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="E.g., Item too large to fix on-site"
+                    rows="3"
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={handleCloseTransportModal}
+                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition"
+                  >
+                    No
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+                  >
+                    Request Transport
                   </button>
                 </div>
               </form>

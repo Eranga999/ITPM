@@ -19,7 +19,7 @@ import Technicians from './pages/Admin/AdminTechnicians';
 import RepairRequests from './pages/Admin/AdminRepairRequests';
 import Transport from './pages/Admin/AdminTransport';
 import Payments from './pages/Admin/AdminPayments';
-
+import CompletedJobs from "./pages/Technician/CompletedJobs";
 
 
 function HomePage() {
@@ -56,6 +56,7 @@ function App() {
         <Route path='/tracking' element={<Tracking />} />
         <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
         <Route path="/technician-dashboard/pending-jobs" element={<PendingJobs />} />
+        <Route path="/technician-dashboard/completed-jobs" element={<CompletedJobs />} />
         <Route path="/technician-dashboard/urgent-repairs" element={<UrgentRepairs />} />
 
 
