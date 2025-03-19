@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import AdminDashboard from './pages/AdminDashboard';
+
 import CustomerDashboard from './pages/CustomerDashboard';
 import TechnicianDashboard from './pages/Technician/TechnicianDashboard';
-import ServiceCenterDashboard from './pages/ServiceCenterDashboard';
+
 import Header from './components/Header';
 import HeroSection from './components/homepageComp/HeroSection';
 import ServicesSection from './components/homepageComp/ServicesSection';
@@ -13,6 +13,13 @@ import BookingForm from './components/CustomerComponent/BookingForm';
 import Tracking from './components/CustomerComponent/RepairTrackingPage';
 import PendingJobs from './pages/Technician/PendingJobs';
 import UrgentRepairs from './pages/Technician/UrgentRepairs';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import ServiceCenters from './pages/Admin/AdminServiceCenters';
+import Technicians from './pages/Admin/AdminTechnicians';
+import RepairRequests from './pages/Admin/AdminRepairRequests';
+import Transport from './pages/Admin/AdminTransport';
+import Payments from './pages/Admin/AdminPayments';
+
 
 
 function HomePage() {
@@ -37,20 +44,28 @@ function App() {
         {/* Default Route Redirects to Login */}
         <Route path="/" element={<HomePage />} />
 
-        {/* Admin Dashboard */}
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+       
         
         {/* Customer Dashboard */}
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         
         {/* Service Center Dashboard */}
-        <Route path="/service-center-dashboard" element={<ServiceCenterDashboard />} />
+        
         
         <Route path='/booking-form' element={<BookingForm />} />
         <Route path='/tracking' element={<Tracking />} />
         <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
         <Route path="/technician-dashboard/pending-jobs" element={<PendingJobs />} />
         <Route path="/technician-dashboard/urgent-repairs" element={<UrgentRepairs />} />
+
+
+        <Route path="/admin-dashboard" element={< AdminDashboard/>} />
+        <Route path="/admin-dashboard/service-centers" element={<ServiceCenters />} />
+        <Route path="/admin-dashboard/technicians" element={<Technicians />} />
+        <Route path="/admin-dashboard/repair-requests" element={<RepairRequests />} />
+        <Route path="/admin-dashboard/transport" element={<Transport />} />
+        <Route path="/admin-dashboard/payments" element={<Payments />} />
+       
 
       </Routes>
     </Router>
