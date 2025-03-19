@@ -4,40 +4,45 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import bookingRoutes from './routes/bookingRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import technicianRoutes from './routes/technicianRoutes.js'; // New import
+
 
 dotenv.config();
 
 const app = express();
 
+app.use((req, res, next) => {
+  console.log(`Request received: ${req.method} ${req.url}`);
+  next();
+});
+
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// MongoDB Connection
 mongoose
   .connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("MongoDB Connected Successfully"))
+  .then(() => console.log('MongoDB Connected Successfully'))
   .catch((err) => {
-    console.error("MongoDB Connection Failed:", err.message);
+    console.error('MongoDB Connection Failed:', err.message);
     process.exit(1);
   });
 
 app.use('/api', bookingRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin', technicianRoutes); // Mount technician routes under /api/admin
 
-// Root route
-app.get("/", (req, res) => {
-  res.send("Easy Fix Backend Running!");
+app.get('/', (req, res) => {
+  res.send('Easy Fix Backend Running!');
 });
 
-// Global error handler
 app.use((err, req, res, next) => {
-  console.error("Global error handler:", err.stack);
+  console.error('Global error handler:', err.stack);
   res.status(500).json({
     success: false,
-    message: "Something went wrong!",
+    message: 'Something went wrong!',
   });
 });
 
