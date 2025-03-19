@@ -1,6 +1,6 @@
 // src/pages/Technician/TechnicianDashboard.jsx
 import React, { useState } from 'react';
-import Sidebar from '../../components/Sidebar'; // Assuming Sidebar is now working
+import Sidebar from '../../components/TechnicianSidebar'; // Assuming Sidebar is now working
 
 const TechnicianDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
