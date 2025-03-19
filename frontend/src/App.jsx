@@ -19,7 +19,7 @@ import Technicians from './pages/Admin/AdminTechnicians';
 import RepairRequests from './pages/Admin/AdminRepairRequests';
 import Transport from './pages/Admin/AdminTransport';
 import Payments from './pages/Admin/AdminPayments';
-
+import CompletedJobs from "./pages/Technician/CompletedJobs";
 
 
 function HomePage() {
@@ -44,8 +44,7 @@ function App() {
         {/* Default Route Redirects to Login */}
         <Route path="/" element={<HomePage />} />
 
-        {/* Admin Dashboard */}
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+       
         
         {/* Customer Dashboard */}
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
@@ -57,6 +56,7 @@ function App() {
         <Route path='/tracking' element={<Tracking />} />
         <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
         <Route path="/technician-dashboard/pending-jobs" element={<PendingJobs />} />
+        <Route path="/technician-dashboard/completed-jobs" element={<CompletedJobs />} />
         <Route path="/technician-dashboard/urgent-repairs" element={<UrgentRepairs />} />
 
 

@@ -3,16 +3,23 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import bookingRoutes from './routes/bookingRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import technicianRoutes from './routes/technicianRoutes.js'; // New import
+import serviceCenterRoutes from './routes/serviceCenterRoutes.js'
+import jobRoutes from './routes/jobRoutes.js';
+import transportRoutes from './routes/transportRoutes.js'; // New import
+
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors({
-  origin: 'http://localhost:5173', // Matches Vite frontend
-  methods: ['GET', 'POST', 'OPTIONS'], // Added OPTIONS for preflight
-  credentials: true,
-}));
+app.use((req, res, next) => {
+  console.log(`Request received: ${req.method} ${req.url}`);
+  next();
+});
+
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 mongoose
@@ -27,6 +34,11 @@ mongoose
   });
 
 app.use('/api', bookingRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/admin', technicianRoutes);
+app.use('/api/admin', serviceCenterRoutes); // Mount technician routes under /api/admin
+app.use('/api/technician', jobRoutes);
+app.use('/api/transport', transportRoutes);
 
 app.get('/', (req, res) => {
   res.send('Easy Fix Backend Running!');
