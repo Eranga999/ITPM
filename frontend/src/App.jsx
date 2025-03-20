@@ -20,7 +20,7 @@ import RepairRequests from './pages/Admin/AdminRepairRequests';
 import Transport from './pages/Admin/AdminTransport';
 import Payments from './pages/Admin/AdminPayments';
 import CompletedJobs from "./pages/Technician/CompletedJobs";
-import ServiceCenterDashboard from './pages/ServiceCenterDashboard';
+import ServiceCenterDashboard from './pages/ServiceCenter/ServiceCenterDashboard';
 
 
 function HomePage() {
