@@ -39,6 +39,7 @@ app.use('/api/admin', technicianRoutes);
 app.use('/api/admin', serviceCenterRoutes); // Mount technician routes under /api/admin
 app.use('/api/technician', jobRoutes);
 app.use('/api/transport', transportRoutes);
+app.use('/api', serviceCenterRoutes);
 
 app.get('/', (req, res) => {
   res.send('Easy Fix Backend Running!');
