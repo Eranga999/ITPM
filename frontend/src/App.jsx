@@ -48,7 +48,7 @@ function App() {
         
         <Route path='/booking-form' element={<BookingForm />} />
         <Route path='/tracking' element={<Tracking />} />
-        <Route path="/edit-booking/:id" element={<RepairChanges />} />
+        <Route path="/edit-booking" element={<RepairChanges />} />
         <Route path="/support" element={<Support />} />
 
       </Routes>

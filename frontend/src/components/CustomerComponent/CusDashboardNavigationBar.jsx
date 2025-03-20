@@ -18,7 +18,7 @@ const CusDashboardNavigationBar = () => {
       <nav className="flex flex-col py-6 space-y-2 px-4 flex-1">
         {[
           { icon: FaUser, text: 'Profile', href: '#' },
-          { icon: FaClipboardList, text: 'Edit Bookings', href: '/edit-booking/:id' },
+          { icon: FaClipboardList, text: 'Edit Bookings', href: '/edit-booking' },
           { icon: FaTools, text: 'Repair history', href: '#' },
           { icon: FaHeadset, text: 'Support', href: '/support' },
           { icon: FaCog, text: 'Settings', href: '#' },
