@@ -1,10 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { format } from 'date-fns';
+import {
+  Truck,
+  Package,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Search,
+  Filter,
+  ArrowUpDown,
+  Settings,
+  Building2
+} from 'lucide-react';
+import AdminSidebar from '../../components/AdminSidebar'; // Import the sidebar
 
 const Transport = () => {
   const [transportRequests, setTransportRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('date');
 
   const fetchTransportRequests = async () => {
     try {
@@ -37,87 +54,202 @@ const Transport = () => {
     fetchTransportRequests();
   }, []);
 
+  const filteredRequests = transportRequests
+    .filter(request => 
+      (statusFilter === 'All' || request.status === statusFilter) &&
+      ((request.job?.appliance || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (request.job?.issue || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (request.serviceCenter?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (request.technician?.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (request.technician?.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime();
+      } else {
+        return a.status.localeCompare(b.status);
+      }
+    });
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-6">Transport Requests</h1>
-      <div className="space-y-6">
-        {transportRequests.length === 0 ? (
-          <p className="text-gray-600">No transport requests available.</p>
-        ) : (
-          transportRequests.map((request) => (
-            <div key={request._id} className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex justify-between items-start">
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <AdminSidebar />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Truck className="h-8 w-8 text-blue-600" />
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Job: {request.job?.appliance || 'N/A'} - {request.job?.issue || 'N/A'}
-                  </h3>
-                  <p className="text-gray-600 mt-1">
-                    Technician: {request.technician?.firstName} {request.technician?.lastName}
-                  </p>
-                  <p className="text-gray-600 mt-1">
-                    Service Center: {request.serviceCenter?.name} - {request.serviceCenter?.location}
-                  </p>
-                  <p className="text-gray-600 mt-1">
-                    Request Date: {new Date(request.requestDate).toLocaleDateString()}
-                  </p>
-                  <p className="text-gray-600 mt-1">Notes: {request.notes || 'None'}</p>
-                  <span
-                    className={`inline-block mt-2 px-3 py-1 text-sm rounded-full ${
-                      request.status === 'Pending'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : request.status === 'Approved'
-                        ? 'bg-green-100 text-green-700'
-                        : request.status === 'In Transit'
-                        ? 'bg-blue-100 text-blue-700'
-                        : request.status === 'Delivered'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}
-                  >
-                    {request.status}
-                  </span>
+                  <h1 className="text-2xl font-bold text-gray-900">Transport Requests</h1>
+                  <p className="text-sm text-gray-500">Manage appliance transportation</p>
                 </div>
-                <div className="flex space-x-3">
-                  {request.status === 'Pending' && (
-                    <>
-                      <button
-                        onClick={() => handleUpdateStatus(request._id, 'Approved')}
-                        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(request._id, 'Cancelled')}
-                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  )}
-                  {request.status === 'Approved' && (
-                    <button
-                      onClick={() => handleUpdateStatus(request._id, 'In Transit')}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-                    >
-                      Mark as In Transit
-                    </button>
-                  )}
-                  {request.status === 'In Transit' && (
-                    <button
-                      onClick={() => handleUpdateStatus(request._id, 'Delivered')}
-                      className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition"
-                    >
-                      Mark as Delivered
-                    </button>
-                  )}
+              </div>
+              <div className="flex items-center space-x-4">
+                <button className="text-gray-500 hover:text-gray-700">
+                  <Settings className="h-6 w-6" />
+                </button>
+                <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                  T
                 </div>
               </div>
             </div>
-          ))
-        )}
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Controls */}
+          <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+            <div className="flex flex-1 gap-4">
+              <div className="relative flex-1">
+                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search requests..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="h-5 w-5 text-gray-400" />
+                <select
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="All">All Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="In Transit">In Transit</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="h-5 w-5 text-gray-400" />
+                <select
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="date">Sort by Date</option>
+                  <option value="status">Sort by Status</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Requests Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredRequests.length === 0 ? (
+              <p className="text-gray-600">No transport requests available.</p>
+            ) : (
+              filteredRequests.map((request) => (
+                <div key={request._id} className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {request.job?.appliance || 'N/A'} - {request.job?.issue || 'N/A'}
+                      </h3>
+                      <p className="text-sm text-gray-500">Request ID: {request._id}</p>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 ${
+                      request.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                      request.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                      request.status === 'In Transit' ? 'bg-blue-100 text-blue-800' :
+                      request.status === 'Delivered' ? 'bg-purple-100 text-purple-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {request.status === 'Pending' ? <Clock className="w-4 h-4" /> :
+                       request.status === 'Approved' ? <CheckCircle className="w-4 h-4" /> :
+                       request.status === 'In Transit' ? <Truck className="w-4 h-4" /> :
+                       request.status === 'Delivered' ? <Package className="w-4 h-4" /> :
+                       <XCircle className="w-4 h-4" />}
+                      <span className="text-sm font-medium">{request.status}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2">
+                      <Building2 className="w-4 h-4 text-gray-400 mt-1" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">{request.serviceCenter?.name} - {request.serviceCenter?.location}</p>
+                        <p className="text-sm text-gray-500">Service Center</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Package className="w-4 h-4 text-gray-400 mt-1" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">{request.job?.appliance || 'N/A'}</p>
+                        <p className="text-sm text-gray-500">Appliance</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Request Date:</span>
+                      <span className="text-gray-900">{format(new Date(request.requestDate), 'MMM d, yyyy')}</span>
+                    </div>
+                    <div className="mt-2 text-sm text-gray-600">
+                      <p className="font-medium">Notes:</p>
+                      <p className="mt-1">{request.notes || 'None'}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
+                    {request.status === 'Pending' && (
+                      <>
+                        <button
+                          onClick={() => handleUpdateStatus(request._id, 'Approved')}
+                          className="flex-1 bg-green-50 text-green-600 px-4 py-2 rounded-lg hover:bg-green-100 transition-colors"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(request._id, 'Cancelled')}
+                          className="flex-1 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
+                    {request.status === 'Approved' && (
+                      <button
+                        onClick={() => handleUpdateStatus(request._id, 'In Transit')}
+                        className="flex-1 bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        Mark as In Transit
+                      </button>
+                    )}
+                    {request.status === 'In Transit' && (
+                      <button
+                        onClick={() => handleUpdateStatus(request._id, 'Delivered')}
+                        className="flex-1 bg-purple-50 text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-100 transition-colors"
+                      >
+                        Mark as Delivered
+                      </button>
+                    )}
+                    {(request.status === 'Delivered' || request.status === 'Cancelled') && (
+                      <button className="flex-1 bg-gray-50 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        View Details
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
