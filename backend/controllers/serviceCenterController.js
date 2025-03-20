@@ -1,3 +1,4 @@
+// controllers/serviceCenterController.js
 import serviceCenterService from '../services/serviceCenterService.js';
 
 class ServiceCenterController {
@@ -45,6 +46,19 @@ class ServiceCenterController {
       res.status(200).json({ success: true, data: deletedCenter, message: 'Service center deleted successfully' });
     } catch (error) {
       console.error('Controller error deleting service center:', error.message, error.stack);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // New endpoint for service center dashboard
+  async getServiceCenterBookings(req, res) {
+    try {
+      const { id } = req.params;
+      console.log('GET /api/service-centers/:id/bookings called');
+      const bookings = await serviceCenterService.getServiceCenterBookings(id);
+      res.status(200).json({ success: true, data: bookings });
+    } catch (error) {
+      console.error('Controller error fetching service center bookings:', error.message, error.stack);
       res.status(500).json({ success: false, message: error.message });
     }
   }

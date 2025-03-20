@@ -3,11 +3,11 @@ import adminBookingService from '../services/adminBookingService.js';
 class AdminController {
   async getAllRepairRequests(req, res) {
     try {
-      console.log('Fetching repair requests'); // Debug log
+      console.log('Fetching repair requests');
       const repairRequests = await adminBookingService.getAllRepairRequests();
       res.status(200).json({ success: true, data: repairRequests });
     } catch (error) {
-      console.error('Error fetching repair requests:', error); // Debug log
+      console.error('Error fetching repair requests:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   }
@@ -23,7 +23,6 @@ class AdminController {
     }
   }
 
-  // New test insert method
   async testInsertBooking(req, res) {
     try {
       const testBooking = {
@@ -41,8 +40,21 @@ class AdminController {
       const newBooking = await adminBookingService.insertTestBooking(testBooking);
       res.status(201).json({ success: true, data: newBooking, message: 'Test booking inserted' });
     } catch (error) {
-      console.error('Error inserting test booking:', error); // Debug log
+      console.error('Error inserting test booking:', error);
       res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // New method to assign service center
+  async assignServiceCenter(req, res) {
+    try {
+      const { id } = req.params;
+      const { serviceCenterId } = req.body;
+      const updatedBooking = await adminBookingService.assignServiceCenter(id, serviceCenterId);
+      res.status(200).json({ success: true, data: updatedBooking, message: 'Service center assigned' });
+    } catch (error) {
+      console.error('Error assigning service center:', error);
+      res.status(400).json({ success: false, message: error.message });
     }
   }
 }
