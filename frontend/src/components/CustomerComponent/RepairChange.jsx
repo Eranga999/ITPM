@@ -17,7 +17,7 @@ const EditBookingModal = ({ booking, isOpen, onClose, onSave }) => {
     onSave(formData);  // Call onSave with updated data
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !booking) return null;  // Prevent rendering if the modal is closed or no booking data is provided
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -46,7 +46,6 @@ const EditBookingModal = ({ booking, isOpen, onClose, onSave }) => {
               required
             />
           </div>
-          {/* Add other editable fields here */}
           <div className="flex justify-between mt-6">
             <button
               type="button"
@@ -107,8 +106,9 @@ const RepairChanges = () => {
 
   // Handle edit button click to open modal
   const handleEditClick = (booking) => {
+    console.log("Editing booking:", booking);  // Debugging line to ensure booking data is passed
     setSelectedBooking(booking);
-    setIsModalOpen(true);
+    setIsModalOpen(true); // Open the modal
   };
 
   // Handle save edited booking
@@ -154,7 +154,7 @@ const RepairChanges = () => {
                   <td className="p-3">{booking.status}</td>
                   <td className="p-3 text-center flex gap-2 justify-center">
                     <button
-                      onClick={() => handleEditClick(booking)}
+                      onClick={() => handleEditClick(booking)} // Ensure this opens the modal
                       className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                     >
                       Edit
@@ -177,8 +177,8 @@ const RepairChanges = () => {
       <EditBookingModal
         booking={selectedBooking}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={(updatedData) => handleEdit(selectedBooking._id, updatedData)}
+        onClose={() => setIsModalOpen(false)} // Close the modal on cancel
+        onSave={(updatedData) => handleEdit(selectedBooking._id, updatedData)} // Save updated data
       />
     </div>
   );
