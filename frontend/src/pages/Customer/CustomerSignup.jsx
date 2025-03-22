@@ -89,7 +89,7 @@ const CustomerSignup = () => {
                     id="firstName"
                     type="text"
                     name="firstName"
-                    placeholder="John"
+                    placeholder="eranga"
                     value={formData.firstName}
                     onChange={handleChange}
                     required
@@ -105,7 +105,7 @@ const CustomerSignup = () => {
                     id="lastName"
                     type="text"
                     name="lastName"
-                    placeholder="Doe"
+                    placeholder="harsha"
                     value={formData.lastName}
                     onChange={handleChange}
                     required
@@ -122,7 +122,7 @@ const CustomerSignup = () => {
                   id="email"
                   type="email"
                   name="email"
-                  placeholder="john.doe@example.com"
+                  placeholder="eranga@gmail.com"
                   value={formData.email}
                   onChange={handleChange}
                   required
@@ -138,7 +138,7 @@ const CustomerSignup = () => {
                   id="phone"
                   type="tel"
                   name="phone"
-                  placeholder="(123) 456-7890"
+                  placeholder="+9412345678"
                   value={formData.phone}
                   onChange={handleChange}
                   required
@@ -206,7 +206,7 @@ const CustomerSignup = () => {
               <div className="text-center">
                 <p className="text-sm text-gray-600">
                   Already have an account?{' '}
-                  <Link to="/login" className="text-blue-500 hover:text-blue-700">
+                  <Link to="/customer-login" className="text-blue-500 hover:text-blue-700">
                     Sign in now
                   </Link>
                 </p>

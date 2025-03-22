@@ -22,6 +22,7 @@ import CompletedJobs from "./pages/Technician/CompletedJobs";
 import ServiceCenterDashboard from './pages/ServiceCenter/ServiceCenterDashboard';
 import CustomerLogin from './pages/Customer/CustomerLogin';
 import CustomerSignup from './pages/Customer/CustomerSignup';
+import StaffLogin from './pages/StaffLogin';
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -70,6 +71,7 @@ function App() {
         <Route path="/admin-dashboard/payments" element={<Payments />} />
         <Route path="/service-center-dashboard" element={<ServiceCenterDashboard />} />
        
+        <Route path="/staff-login" element={<StaffLogin />} />
 
       </Routes>
     </Router>
