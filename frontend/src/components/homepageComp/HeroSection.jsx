@@ -49,7 +49,7 @@ function HeroSection() {
                 Book a Repair
               </button>
               <button className="border-2 border-white hover:bg-blue-600 hover:border-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300">
-                View Services
+               Instant Fix mode
               </button>
             </div>
 

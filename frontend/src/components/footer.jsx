@@ -11,7 +11,7 @@ function Footer() {
           <div>
             <div className="flex items-center space-x-3 mb-6">
 
-            <img src={logo} alt="EasyFix Logo" className="w-16 h-auto rounded-full object-cover"/>
+            <img src={logo} alt="EasyFix Logo" className="w-25 h-auto rounded-full object-cover"/>
             <span className="text-2xl font-bold">EasyFix</span>
             </div>
             <p className="text-gray-400 mb-6">

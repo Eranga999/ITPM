@@ -1,4 +1,8 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import AdminDashboard from './pages/AdminDashboard';
+import CustomerDashboard from './pages/Customer/CustomerDashboard'
+import TechnicianDashboard from './pages/TechnicianDashboard';
+import ServiceCenterDashboard from './pages/ServiceCenterDashboard';
 
 import CustomerDashboard from './pages/CustomerDashboard';
 import TechnicianDashboard from './pages/Technician/TechnicianDashboard';
@@ -7,10 +11,12 @@ import Header from './components/Header';
 import HeroSection from './components/homepageComp/HeroSection';
 import ServicesSection from './components/homepageComp/ServicesSection';
 import HowItWorksSection from './components/homepageComp/HowItWorksSection';
-import homeheader from './components/homepageComp/homeheader';
 import Footer from './components/footer';
 import BookingForm from './components/CustomerComponent/BookingForm';
 import Tracking from './components/CustomerComponent/RepairTrackingPage';
+import Homeheader from './components/homepageComp/HomeHeader';
+import RepairChanges from './components/CustomerComponent/RepairChange';
+import Support from './pages/Customer/Support';
 import PendingJobs from './pages/Technician/PendingJobs';
 import UrgentRepairs from './pages/Technician/UrgentRepairs';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -26,12 +32,12 @@ import ServiceCenterDashboard from './pages/ServiceCenter/ServiceCenterDashboard
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      <Header />
+     <Homeheader/>
       <HeroSection />
       <ServicesSection />
       <HowItWorksSection />
       <Footer />
-      <homeheader/>
+      
 
     </div>
   );
@@ -55,6 +61,8 @@ function App() {
         
         <Route path='/booking-form' element={<BookingForm />} />
         <Route path='/tracking' element={<Tracking />} />
+        <Route path="/edit-booking" element={<RepairChanges />} />
+        <Route path="/support" element={<Support />} />
         <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
         <Route path="/technician-dashboard/pending-jobs" element={<PendingJobs />} />
         <Route path="/technician-dashboard/completed-jobs" element={<CompletedJobs />} />

@@ -4,6 +4,7 @@ import Footer from "../footer";
 import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable"; // Import autoTable directly
+import HomeHeader from "../homepageComp/HomeHeader";
 
 const RepairTrackingPage = () => {
   const [bookings, setBookings] = useState([]);
@@ -200,7 +201,7 @@ const RepairTrackingPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
+      <Header/>
 
       <div className="flex-grow py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
