@@ -67,7 +67,7 @@ const bookingSchema = new mongoose.Schema({
   },
   technicianAssigned: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Technician',
     default: null
   }
 }, { timestamps: true });

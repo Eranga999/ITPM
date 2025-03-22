@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+// Define the schema for technicians
 const technicianSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -32,6 +33,7 @@ const technicianSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+// Create the model
 const Technician = mongoose.model('Technician', technicianSchema);
 
 export default Technician;
