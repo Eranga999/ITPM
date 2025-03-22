@@ -3,13 +3,13 @@ import Header from "../Header";
 import Footer from "../footer";
 import axios from "axios";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // Import autoTable directly
-import HomeHeader from "../homepageComp/HomeHeader";
+import autoTable from "jspdf-autotable";
 
 const RepairTrackingPage = () => {
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchField, setSearchField] = useState("name"); // New state to track search field
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -39,23 +39,37 @@ const RepairTrackingPage = () => {
     fetchBookings();
   }, []);
 
-  // Handle search by name or appliance type
+  // Handle search by selected field
   const handleSearchChange = (e) => {
-    const value = e.target.value;
+    const value = e.target.value.trim();
     setSearchTerm(value);
 
-    if (value.trim() === "") {
+    if (value === "") {
       setFilteredBookings(bookings);
     } else {
-      const filtered = bookings.filter(
-        (booking) =>
-          (booking.name &&
-            booking.name.toLowerCase().includes(value.toLowerCase())) ||
-          (booking.serviceType &&
-            booking.serviceType.toLowerCase().includes(value.toLowerCase()))
-      );
+      const filtered = bookings.filter((booking) => {
+        const lowerSearchTerm = value.toLowerCase();
+        if (searchField === "name") {
+          const firstName = booking.name ? booking.name.split(" ")[0].toLowerCase() : "";
+          return firstName.includes(lowerSearchTerm);
+        } else if (searchField === "appliance") {
+          const applianceType = booking.serviceType ? booking.serviceType.toLowerCase() : "";
+          return applianceType.includes(lowerSearchTerm);
+        } else if (searchField === "orderNumber") {
+          const orderNumber = booking.orderNumber || booking.bookingReference || `rep-${booking._id?.substring(0, 8) || "n/a"}`;
+          return orderNumber.toLowerCase().includes(lowerSearchTerm);
+        }
+        return false;
+      });
       setFilteredBookings(filtered);
     }
+  };
+
+  // Handle search field change
+  const handleSearchFieldChange = (e) => {
+    setSearchField(e.target.value);
+    setSearchTerm(""); // Reset search term when field changes
+    setFilteredBookings(bookings); // Reset filtered bookings
   };
 
   // Calculate the current step based on status
@@ -91,14 +105,17 @@ const RepairTrackingPage = () => {
       // Add header
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(0, 102, 204); // Blue color for title
+      doc.setTextColor(0, 102, 204);
       doc.text("Repair Service Report", 105, 20, { align: "center" });
 
       // Add "Generated for" and date
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(0, 0, 0); // Black color for text
-      doc.text(`Generated for: ${searchTerm || "All Customers"}`, 14, 30);
+      doc.setTextColor(0, 0, 0);
+      const generatedFor = searchTerm
+        ? `Filtered by ${searchField === "name" ? "First Name" : searchField === "appliance" ? "Appliance Type" : "Order Number"}: ${searchTerm}`
+        : "All Customers";
+      doc.text(`Generated for: ${generatedFor}`, 14, 30);
       const currentDate = new Date().toLocaleDateString();
       doc.text(`Date: ${currentDate}`, 14, 40);
 
@@ -117,11 +134,12 @@ const RepairTrackingPage = () => {
         if (!booking) {
           throw new Error("Invalid booking data found");
         }
+        const orderNumber = booking.orderNumber || booking.bookingReference || `REP-${booking._id?.substring(0, 8) || "N/A"}`;
         return [
-          booking.orderNumber || `REP-${booking._id?.substring(0, 8) || "N/A"}`,
+          orderNumber,
           booking.name || "N/A",
           booking.serviceType === "refrigerator"
-            ? "Samsung Refrigerator"
+            ? " Refrigerator"
             : (booking.serviceType || "N/A").replace(/-/g, " "),
           booking.preferredDate
             ? new Date(booking.preferredDate).toISOString().split("T")[0]
@@ -133,7 +151,7 @@ const RepairTrackingPage = () => {
                 .toISOString()
                 .split("T")[0]
             : "N/A",
-          booking.technician || "Not assigned yet",
+          booking.technician || booking.technicianAssigned || "Not assigned yet",
           getCurrentStatus(booking.status).text,
         ];
       });
@@ -151,31 +169,30 @@ const RepairTrackingPage = () => {
           overflow: "linebreak",
         },
         headStyles: {
-          fillColor: [0, 102, 204], // Blue header
-          textColor: [255, 255, 255], // White text
+          fillColor: [0, 102, 204],
+          textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
         },
         bodyStyles: {
-          fillColor: [255, 255, 255], // White background for rows
-          textColor: [0, 0, 0], // Black text
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
           halign: "left",
         },
         alternateRowStyles: {
-          fillColor: [240, 248, 255], // Light blue for alternate rows
+          fillColor: [240, 248, 255],
         },
         columnStyles: {
-          0: { halign: "center" }, // Order Number
-          1: { halign: "left" }, // Name
-          2: { halign: "left" }, // Appliance
-          3: { halign: "center" }, // Scheduled Date
-          4: { halign: "center" }, // Est. Completion
-          5: { halign: "left" }, // Technician
-          6: { halign: "center" }, // Status
+          0: { halign: "center" },
+          1: { halign: "left" },
+          2: { halign: "left" },
+          3: { halign: "center" },
+          4: { halign: "center" },
+          5: { halign: "left" },
+          6: { halign: "center" },
         },
         margin: { top: 50 },
         didDrawPage: (data) => {
-          // Add footer with page number
           const pageCount = doc.internal.getNumberOfPages();
           for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
@@ -191,8 +208,10 @@ const RepairTrackingPage = () => {
       });
 
       console.log("Table generated, downloading PDF...");
-      // Download the PDF
-      doc.save(`repair_report_${searchTerm || "all"}_${currentDate}.pdf`);
+      const fileName = searchTerm
+        ? `repair_report_${searchField}_${searchTerm}_${currentDate}.pdf`
+        : `repair_report_all_${currentDate}.pdf`;
+      doc.save(fileName);
     } catch (err) {
       console.error("Error generating report:", err);
       alert("Failed to generate report: " + err.message);
@@ -201,7 +220,7 @@ const RepairTrackingPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header/>
+      <Header />
 
       <div className="flex-grow py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
@@ -215,14 +234,25 @@ const RepairTrackingPage = () => {
 
           {/* Search Bar and Report Button */}
           <div className="bg-white p-4 shadow-md">
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                placeholder="Search by name or appliance type..."
-                className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              <div className="flex items-center gap-2 flex-grow">
+                <select
+                  value={searchField}
+                  onChange={handleSearchFieldChange}
+                  className="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="name">First Name</option>
+                  <option value="appliance">Appliance Type</option>
+                  <option value="orderNumber">Order Number</option>
+                </select>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  placeholder={`Search by ${searchField === "name" ? "first name" : searchField === "appliance" ? "appliance type" : "order number"}...`}
+                  className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
               <button
                 onClick={generateReport}
                 className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
@@ -253,7 +283,7 @@ const RepairTrackingPage = () => {
               </h2>
               <p className="mt-2 text-gray-600">
                 {searchTerm
-                  ? "No bookings match your search."
+                  ? `No bookings match your search for "${searchTerm}" in ${searchField === "name" ? "first name" : searchField === "appliance" ? "appliance type" : "order number"}.`
                   : "There are no bookings available."}
               </p>
             </div>
@@ -273,8 +303,7 @@ const RepairTrackingPage = () => {
                     <div>
                       <p className="text-sm text-gray-500">Order Number</p>
                       <p className="font-medium">
-                        {booking.orderNumber ||
-                          `REP-${booking._id?.substring(0, 8) || "N/A"}`}
+                        {booking.orderNumber || booking.bookingReference || `REP-${booking._id?.substring(0, 8) || "N/A"}`}
                       </p>
                     </div>
                     <div>
@@ -321,7 +350,7 @@ const RepairTrackingPage = () => {
                     <div>
                       <p className="text-sm text-gray-500">Technician</p>
                       <p className="font-medium">
-                        {booking.technician || "not assign yet"}
+                        {booking.technician || booking.technicianAssigned || "Not assigned yet"}
                       </p>
                     </div>
                   </div>
