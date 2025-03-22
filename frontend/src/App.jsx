@@ -20,8 +20,8 @@ import Transport from './pages/Admin/AdminTransport';
 import Payments from './pages/Admin/AdminPayments';
 import CompletedJobs from "./pages/Technician/CompletedJobs";
 import ServiceCenterDashboard from './pages/ServiceCenter/ServiceCenterDashboard';
-
-
+import CustomerLogin from './pages/Customer/CustomerLogin';
+import CustomerSignup from './pages/Customer/CustomerSignup';
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -48,8 +48,8 @@ function App() {
         
         {/* Customer Dashboard */}
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-        
-        {/* Service Center Dashboard */}
+        <Route path="/customer-login" element={<CustomerLogin />} />
+        <Route path="/customer-signup" element={<CustomerSignup />} />
         
         
         <Route path='/booking-form' element={<BookingForm />} />
