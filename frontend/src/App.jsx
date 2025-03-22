@@ -1,13 +1,6 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import AdminDashboard from './pages/AdminDashboard';
 import CustomerDashboard from './pages/Customer/CustomerDashboard'
-import TechnicianDashboard from './pages/TechnicianDashboard';
-import ServiceCenterDashboard from './pages/ServiceCenterDashboard';
-
-import CustomerDashboard from './pages/CustomerDashboard';
 import TechnicianDashboard from './pages/Technician/TechnicianDashboard';
-
-import Header from './components/Header';
 import HeroSection from './components/homepageComp/HeroSection';
 import ServicesSection from './components/homepageComp/ServicesSection';
 import HowItWorksSection from './components/homepageComp/HowItWorksSection';
