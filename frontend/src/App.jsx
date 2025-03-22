@@ -57,6 +57,7 @@ function App() {
         <Route path='/tracking' element={<Tracking />} />
         <Route path="/edit-booking" element={<RepairChanges />} />
         <Route path="/support" element={<Support />} />
+        
         <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
         <Route path="/technician-dashboard/pending-jobs" element={<PendingJobs />} />
         <Route path="/technician-dashboard/completed-jobs" element={<CompletedJobs />} />
