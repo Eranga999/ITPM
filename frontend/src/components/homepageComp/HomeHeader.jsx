@@ -17,7 +17,7 @@ function HomeHeader() {
       <div className="container mx-auto px-4 py-3 md:py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-3">
-          <img src={logo} alt="EasyFix Logo" className="w-25 h-auto"/>
+          <img src={logo} alt="EasyFix Logo" className="w-10 h-auto"/>
             <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">EasyFix</span>
           </div>
           
