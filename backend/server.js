@@ -38,6 +38,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin', technicianRoutes);
 app.use('/api/admin', serviceCenterRoutes); // Mount technician routes under /api/admin
 app.use('/api/technician', jobRoutes);
+app.use('/api/technician', technicianRoutes); // Also mount technician routes under /api/technician
 app.use('/api/transport', transportRoutes);
 app.use('/api', serviceCenterRoutes);
 
