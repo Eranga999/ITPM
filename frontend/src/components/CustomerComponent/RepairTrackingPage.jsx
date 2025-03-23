@@ -354,7 +354,7 @@ const RepairTrackingPage = () => {
                       </p>
                     </div>
                   </div>
-                </div>
+                </div> 
 
                 {/* Repair Status */}
                 <div className="mt-6">
