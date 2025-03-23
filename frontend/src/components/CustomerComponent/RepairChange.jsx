@@ -1,19 +1,88 @@
 import { useState, useEffect } from "react";
 
-// Modal Component for Editing Booking
+// Toast Notification Component
+const Toast = ({ message, type, onClose }) => {
+  return (
+    <div 
+      className={`fixed bottom-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+        type === "success" ? "bg-emerald-500" : "bg-red-500"
+      } text-white transform transition-all duration-300 ease-in-out`}
+    >
+      <div className="flex items-center space-x-2">
+        {type === "success" ? (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        )}
+        <p>{message}</p>
+        <button onClick={onClose} className="ml-4 text-white hover:text-gray-200">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Confirmation Dialog Component
+const ConfirmDialog = ({ isOpen, message, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div 
+        className="bg-white rounded-xl overflow-hidden shadow-2xl max-w-md w-full transform transition-all duration-300 ease-in-out"
+      >
+        <div className="bg-red-50 p-5 border-b border-red-100">
+          <div className="flex items-center justify-center mb-2">
+            <div className="bg-red-100 rounded-full p-2">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          </div>
+          <h3 className="text-xl font-bold text-center text-gray-900">Confirm Action</h3>
+        </div>
+        
+        <div className="p-6">
+          <p className="text-gray-700 mb-6 text-center">{message}</p>
+          
+          <div className="flex justify-center space-x-3">
+            <button
+              onClick={onCancel}
+              className="py-2 px-4 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className="py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Modal Component for Editing Booking
 const EditBookingModal = ({ booking, isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState(booking || { name: "", serviceType: "", preferredDate: "" });
-  const [dateError, setDateError] = useState(null); // State to store date validation error
-
-  // Debugging: Log props to ensure they're passed correctly
-  console.log("EditBookingModal Props:", { booking, isOpen });
+  const [dateError, setDateError] = useState(null);
 
   // Reset formData when booking changes
   useEffect(() => {
     if (booking) {
       setFormData(booking);
     } else {
-      setFormData({ name: "", serviceType: "", preferredDate: "" }); // Fallback if booking is null
+      setFormData({ name: "", serviceType: "", preferredDate: "" });
     }
   }, [booking]);
 
@@ -45,38 +114,50 @@ const EditBookingModal = ({ booking, isOpen, onClose, onSave }) => {
       return;
     }
 
-    console.log("Submitting updated data:", formData); // Debugging line
     onSave(formData); // Call onSave with updated data
   };
 
   if (!isOpen || !booking || !formData) {
-    console.log("Modal not rendering: isOpen =", isOpen, "booking =", booking, "formData =", formData);
-    return null; // Prevent rendering if the modal is closed, no booking data, or formData is not ready
+    return null;
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded-md shadow-lg max-w-lg w-full">
-        <h3 className="text-2xl font-bold mb-4">Edit Booking</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">Customer Name</label>
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60">
+      <div 
+        className="bg-white p-6 rounded-xl shadow-2xl max-w-lg w-full transform transition-all duration-300 ease-in-out"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gray-800">Edit Booking</h3>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 focus:outline-none"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
             <input
               type="text"
               name="name"
               value={formData.name || ""}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
               required
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">Service Type</label>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
             <select
               name="serviceType"
               value={formData.serviceType || ""}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white"
               required
             >
               <option value="">Select an appliance</option>
@@ -92,32 +173,34 @@ const EditBookingModal = ({ booking, isOpen, onClose, onSave }) => {
               <option value="vacuum-cleaner">Vacuum Cleaner</option>
             </select>
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">Preferred Date</label>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
             <input
               type="date"
               name="preferredDate"
               value={formData.preferredDate ? formData.preferredDate.slice(0, 10) : ""}
               onChange={handleChange}
-              min={today} // Restrict past dates in the date picker
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              min={today}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
               required
             />
             {dateError && (
               <p className="mt-1 text-sm text-red-500">{dateError}</p>
             )}
           </div>
-          <div className="flex justify-between mt-6">
+          
+          <div className="flex justify-end space-x-3 pt-3">
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400 transition-all duration-300"
+              className="px-5 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-all duration-200"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-all duration-300"
+              className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all duration-200"
             >
               Save Changes
             </button>
@@ -135,8 +218,19 @@ const RepairChanges = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+  const [confirmDialog, setConfirmDialog] = useState({ show: false, id: null, message: "" });
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Auto-hide toast after 4 seconds
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => {
+        setToast({ ...toast, show: false });
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // Fetch bookings from API
   useEffect(() => {
@@ -148,17 +242,11 @@ const RepairChanges = () => {
         return res.json();
       })
       .then((response) => {
-        console.log("API Response:", response);
         const bookingsData = response.data || response;
-
-        // Filter out bookings with missing or invalid _id
         const validBookings = bookingsData.filter((booking) => booking && booking._id);
-
-        // Check for duplicate _id values
         const idSet = new Set(validBookings.map((booking) => booking._id));
+        
         if (idSet.size !== validBookings.length) {
-          console.warn("Duplicate _id values found in bookings:", validBookings);
-          // Filter out duplicates by keeping the first occurrence
           const uniqueBookings = [];
           const seenIds = new Set();
           for (const booking of validBookings) {
@@ -171,7 +259,7 @@ const RepairChanges = () => {
         } else {
           setBookings(validBookings);
         }
-
+        
         setLoading(false);
       })
       .catch((err) => {
@@ -196,9 +284,13 @@ const RepairChanges = () => {
       })
       .then(() => {
         setBookings(bookings.filter((booking) => booking._id !== id));
-        setError(null); // Clear any previous errors
-        setSuccessMessage("Booking deleted successfully!");
-        setShowSuccessPopup(true); // Show success popup
+        setError(null);
+        setToast({
+          show: true,
+          message: "Booking deleted successfully!",
+          type: "success",
+        });
+        setConfirmDialog({ show: false, id: null, message: "" });
       })
       .catch((err) => {
         console.error("Error deleting booking:", err);
@@ -208,35 +300,28 @@ const RepairChanges = () => {
 
   // Handle edit button click to open modal
   const handleEditClick = (booking) => {
-    console.log("Editing booking:", booking);
     if (!booking || !booking._id) {
       console.error("Invalid booking data:", booking);
       return;
     }
     setSelectedBooking(booking);
-    setIsModalOpen(true); // Open the modal
+    setIsModalOpen(true);
   };
 
   // Handle save edited booking
   const handleEdit = (id, updatedData) => {
     if (!id) {
-      console.error("No ID provided for updating booking");
       setError("Failed to update booking: Invalid ID");
       return;
     }
 
-    // Find the original booking to merge with updatedData
     const originalBooking = bookings.find((b) => b._id === id);
     if (!originalBooking) {
-      console.error("Original booking not found for ID:", id);
       setError("Failed to update booking: Booking not found");
       return;
     }
 
-    // Merge updatedData with originalBooking to preserve other fields
     const mergedData = { ...originalBooking, ...updatedData };
-
-    console.log("Sending update request for ID:", id, "with data:", mergedData);
 
     fetch(`http://localhost:5000/api/bookings/${id}`, {
       method: "PUT",
@@ -252,8 +337,6 @@ const RepairChanges = () => {
         return res.json();
       })
       .then((response) => {
-        console.log("Update successful, received:", response);
-        // Extract the updated booking from the response
         const updatedBooking = response.data;
         if (!updatedBooking) {
           throw new Error("Updated booking data not found in response");
@@ -261,11 +344,14 @@ const RepairChanges = () => {
         setBookings((prevBookings) =>
           prevBookings.map((b) => (b._id === id ? updatedBooking : b))
         );
-        setIsModalOpen(false); // Close the modal after save
-        setSelectedBooking(null); // Reset selectedBooking
-        setError(null); // Clear any previous errors
-        setSuccessMessage("Booking updated successfully!");
-        setShowSuccessPopup(true); // Show success popup
+        setIsModalOpen(false);
+        setSelectedBooking(null);
+        setError(null);
+        setToast({
+          show: true,
+          message: "Booking updated successfully!",
+          type: "success",
+        });
       })
       .catch((err) => {
         console.error("Error updating booking:", err);
@@ -273,44 +359,55 @@ const RepairChanges = () => {
       });
   };
 
-  // Close the success popup
-  const handleClosePopup = () => {
-    setShowSuccessPopup(false);
+  // Show confirmation dialog before deleting
+  const confirmDelete = (id) => {
+    const booking = bookings.find(b => b._id === id);
+    if (!booking) return;
+    
+    setConfirmDialog({
+      show: true,
+      id: id,
+      message: `Are you sure you want to delete the booking for ${booking.name || 'Unknown'}?`
+    });
   };
 
-  if (loading) return <p className="text-center text-lg text-gray-500">Loading...</p>;
+  // Filter bookings by status
+  const filteredBookings = statusFilter === "all" 
+    ? bookings 
+    : bookings.filter(booking => booking.status === statusFilter);
+
+  // Get unique statuses for filter dropdown
+  const statusOptions = ["all", ...new Set(bookings.map(b => b.status))].filter(Boolean);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
+    </div>
+  );
+
   if (error) return (
-    <div className="text-center text-red-500">
-      <p>{error}</p>
+    <div className="bg-red-50 p-6 rounded-xl shadow-md text-center max-w-xl mx-auto my-12">
+      <div className="flex items-center justify-center mb-4">
+        <div className="bg-red-100 rounded-full p-2">
+          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+      </div>
+      <p className="text-red-800 mb-4 font-medium">{error}</p>
       <button
         onClick={() => {
           setError(null);
           setLoading(true);
-          // Re-fetch bookings
           fetch("http://localhost:5000/api/bookings")
             .then((res) => {
-              if (!res.ok) {
-                throw new Error("Failed to fetch bookings");
-              }
+              if (!res.ok) throw new Error("Failed to fetch bookings");
               return res.json();
             })
             .then((response) => {
               const bookingsData = response.data || response;
               const validBookings = bookingsData.filter((booking) => booking && booking._id);
-              const idSet = new Set(validBookings.map((booking) => booking._id));
-              if (idSet.size !== validBookings.length) {
-                const uniqueBookings = [];
-                const seenIds = new Set();
-                for (const booking of validBookings) {
-                  if (!seenIds.has(booking._id)) {
-                    seenIds.add(booking._id);
-                    uniqueBookings.push(booking);
-                  }
-                }
-                setBookings(uniqueBookings);
-              } else {
-                setBookings(validBookings);
-              }
+              setBookings(validBookings);
               setLoading(false);
             })
             .catch((err) => {
@@ -319,7 +416,7 @@ const RepairChanges = () => {
               setLoading(false);
             });
         }}
-        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+        className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md transition-all duration-200"
       >
         Retry
       </button>
@@ -327,59 +424,128 @@ const RepairChanges = () => {
   );
 
   return (
-    <div className="container mx-auto p-6">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Manage Your Bookings</h2>
+    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 min-h-screen py-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 sm:p-10">
+            <h2 className="text-3xl font-extrabold text-white mb-2">Manage Your Bookings</h2>
+            <p className="text-indigo-100">View, edit, and manage all your appliance repair appointments</p>
+          </div>
 
-      {bookings.length === 0 ? (
-        <p className="text-center text-gray-500">No bookings found.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse border border-gray-300 shadow-md bg-white rounded-lg">
-            <thead>
-              <tr className="bg-gray-100 border-b">
-                <th className="p-3 text-left text-gray-700">Customer Name</th>
-                <th className="p-3 text-left text-gray-700">Service</th>
-                <th className="p-3 text-left text-gray-700">Preferred Date</th>
-                <th className="p-3 text-left text-gray-700">Status</th>
-                <th className="p-3 text-center text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.map((booking) => (
-                <tr key={booking._id} className="border-b hover:bg-gray-50">
-                  <td className="p-3 text-gray-800">{booking.name || "Unknown"}</td>
-                  <td className="p-3 text-gray-800">
-                    {booking.serviceType
-                      ? booking.serviceType
-                          .split('-')
-                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                          .join(' ')
-                      : "N/A"}
-                  </td>
-                  <td className="p-3 text-gray-800">
-                    {new Date(booking.preferredDate).toLocaleDateString()}
-                  </td>
-                  <td className="p-3 text-gray-800">{booking.status}</td>
-                  <td className="p-3 text-center flex gap-2 justify-center">
-                    <button
-                      onClick={() => handleEditClick(booking)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-all duration-300"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(booking._id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-all duration-300"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="p-6">
+            {/* Filter Controls */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Filter by status:</label>
+                <select 
+                  value={statusFilter} 
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="border border-gray-300 rounded-lg p-2 text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  {statusOptions.map(status => (
+                    <option key={status} value={status}>
+                      {status === "all" ? "All Statuses" : status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="text-gray-500 text-sm">
+                Showing {filteredBookings.length} of {bookings.length} bookings
+              </div>
+            </div>
+
+            {filteredBookings.length === 0 ? (
+              <div className="bg-gray-50 rounded-xl p-12 text-center">
+                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-gray-600 mb-4">No bookings found matching your filters.</p>
+                {statusFilter !== "all" && (
+                  <button
+                    onClick={() => setStatusFilter("all")}
+                    className="text-indigo-600 hover:text-indigo-800 font-medium"
+                  >
+                    Show all bookings
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preferred Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredBookings.map((booking, index) => (
+                      <tr 
+                        key={booking._id} 
+                        className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-medium text-gray-900">{booking.name || "Unknown"}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-gray-700">
+                            {booking.serviceType
+                              ? booking.serviceType
+                                  .split('-')
+                                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                  .join(' ')
+                              : "N/A"}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-gray-700">
+                            {new Date(booking.preferredDate).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                            booking.status === "Pending" ? "bg-yellow-100 text-yellow-800" :
+                            booking.status === "Confirmed" ? "bg-green-100 text-green-800" :
+                            booking.status === "Completed" ? "bg-blue-100 text-blue-800" :
+                            booking.status === "Cancelled" ? "bg-red-100 text-red-800" :
+                            "bg-gray-100 text-gray-800"
+                          }`}>
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => handleEditClick(booking)}
+                              className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition-colors duration-150"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => confirmDelete(booking._id)}
+                              className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors duration-150"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Edit Booking Modal */}
       <EditBookingModal
@@ -392,38 +558,22 @@ const RepairChanges = () => {
         onSave={(updatedData) => handleEdit(selectedBooking?._id, updatedData)}
       />
 
-      {/* Success Popup Modal */}
-      {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full shadow-xl transform transition-all">
-            <div className="bg-green-50 p-4 rounded-t-lg border-b border-gray-100">
-              <div className="flex items-center justify-center mb-2">
-                <div className="bg-green-100 rounded-full p-2">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-center text-gray-900">Success!</h3>
-            </div>
-            
-            <div className="p-6">
-              <p className="text-gray-700 mb-6">
-                {successMessage}
-              </p>
-              
-              <div className="flex justify-center">
-                <button
-                  onClick={handleClosePopup}
-                  className="w-full py-3 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Toast Notification */}
+      {toast.show && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ ...toast, show: false })} 
+        />
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog 
+        isOpen={confirmDialog.show}
+        message={confirmDialog.message}
+        onConfirm={() => handleDelete(confirmDialog.id)}
+        onCancel={() => setConfirmDialog({ show: false, id: null, message: "" })}
+      />
     </div>
   );
 };
