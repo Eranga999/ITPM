@@ -20,8 +20,9 @@ import Transport from './pages/Admin/AdminTransport';
 import Payments from './pages/Admin/AdminPayments';
 import CompletedJobs from "./pages/Technician/CompletedJobs";
 import ServiceCenterDashboard from './pages/ServiceCenter/ServiceCenterDashboard';
-
-
+import CustomerLogin from './pages/Customer/CustomerLogin';
+import CustomerSignup from './pages/Customer/CustomerSignup';
+import StaffLogin from './pages/StaffLogin';
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -44,18 +45,19 @@ function App() {
         {/* Default Route Redirects to Login */}
         <Route path="/" element={<HomePage />} />
 
-       
+        <Route path="/staff-login" element={<StaffLogin />} />
         
         {/* Customer Dashboard */}
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-        
-        {/* Service Center Dashboard */}
+        <Route path="/customer-login" element={<CustomerLogin />} />
+        <Route path="/customer-signup" element={<CustomerSignup />} />
         
         
         <Route path='/booking-form' element={<BookingForm />} />
         <Route path='/tracking' element={<Tracking />} />
         <Route path="/edit-booking" element={<RepairChanges />} />
         <Route path="/support" element={<Support />} />
+
         <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
         <Route path="/technician-dashboard/pending-jobs" element={<PendingJobs />} />
         <Route path="/technician-dashboard/completed-jobs" element={<CompletedJobs />} />
@@ -68,8 +70,10 @@ function App() {
         <Route path="/admin-dashboard/repair-requests" element={<RepairRequests />} />
         <Route path="/admin-dashboard/transport" element={<Transport />} />
         <Route path="/admin-dashboard/payments" element={<Payments />} />
+
         <Route path="/service-center-dashboard" element={<ServiceCenterDashboard />} />
        
+     
 
       </Routes>
     </Router>

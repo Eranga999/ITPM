@@ -1,3 +1,4 @@
+// services/bookingService.js
 import Booking from '../models/Booking.js';
 
 class BookingService {
@@ -10,9 +11,8 @@ class BookingService {
         throw new Error('Preferred date cannot be in the past.');
       }
 
-      // Check preferredTime value and assign if valid
       if (!['morning', 'afternoon', 'evening'].includes(bookingData.preferredTime)) {
-        bookingData.preferredTime = null;  // Set to null if invalid
+        bookingData.preferredTime = null;
       }
 
       const booking = new Booking(bookingData);
@@ -27,7 +27,10 @@ class BookingService {
 
   async getAllBookings() {
     try {
-      return await Booking.find();
+      // Populate technicianAssigned with firstName and lastName
+      const bookings = await Booking.find().populate('technicianAssigned', 'firstName lastName');
+      console.log('Fetched bookings (backend):', JSON.stringify(bookings, null, 2)); // Add debugging
+      return bookings;
     } catch (error) {
       console.error('Error fetching bookings:', error);
       throw new Error('Failed to fetch bookings');
@@ -36,7 +39,7 @@ class BookingService {
 
   async getBookingById(id) {
     try {
-      const booking = await Booking.findById(id);
+      const booking = await Booking.findById(id).populate('technicianAssigned', 'firstName lastName');
       if (!booking) throw new Error('Booking not found');
       return booking;
     } catch (error) {
@@ -48,7 +51,7 @@ class BookingService {
   async updateBooking(id, updatedData) {
     try {
       updatedData.preferredDate = new Date(updatedData.preferredDate);
-      const booking = await Booking.findByIdAndUpdate(id, updatedData, { new: true });
+      const booking = await Booking.findByIdAndUpdate(id, updatedData, { new: true }).populate('technicianAssigned', 'firstName lastName');
       if (!booking) throw new Error('Booking not found');
       return booking;
     } catch (error) {

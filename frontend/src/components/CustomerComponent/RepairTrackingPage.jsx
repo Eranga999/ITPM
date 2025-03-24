@@ -1,64 +1,92 @@
+// RepairTrackingPage.jsx
 import { useState, useEffect } from "react";
 import Header from "../Header";
 import Footer from "../footer";
 import axios from "axios";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // Import autoTable directly
-import HomeHeader from "../homepageComp/HomeHeader";
+import autoTable from "jspdf-autotable";
 
 const RepairTrackingPage = () => {
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
+  const [technicians, setTechnicians] = useState({}); // Map of technician IDs to names
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchField, setSearchField] = useState("name");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch all bookings data
   useEffect(() => {
-    const fetchBookings = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await axios.get("http://localhost:5000/api/bookings");
-        console.log("Bookings fetched:", response.data);
-        const data = response.data.data || response.data;
-        if (!Array.isArray(data)) {
+        // Fetch bookings and technicians simultaneously
+        const [bookingResponse, technicianResponse] = await Promise.all([
+          axios.get("http://localhost:5000/api/bookings"),
+          axios.get("http://localhost:5000/api/admin/technicians"),
+        ]);
+
+        // Log the fetched bookings to debug
+        console.log("Bookings fetched (frontend):", bookingResponse.data);
+        const bookingData = bookingResponse.data.data || bookingResponse.data;
+        if (!Array.isArray(bookingData)) {
           throw new Error("Fetched bookings data is not an array");
         }
-        setBookings(data);
-        setFilteredBookings(data);
+        setBookings(bookingData);
+        setFilteredBookings(bookingData);
+
+        // Log the fetched technicians to debug
+        console.log("Technicians fetched (frontend):", technicianResponse.data);
+        const technicianData = technicianResponse.data.data || technicianResponse.data;
+        // Create a map of technician IDs to names
+        const techMap = technicianData.reduce((acc, tech) => {
+          acc[tech._id] = `${tech.firstName} ${tech.lastName}`;
+          return acc;
+        }, {});
+        setTechnicians(techMap);
       } catch (err) {
-        console.error("Error fetching bookings:", err);
-        setError("Failed to fetch bookings. Please try again.");
+        console.error("Error fetching data:", err);
+        setError("Failed to fetch data. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBookings();
+    fetchData();
   }, []);
 
-  // Handle search by name or appliance type
   const handleSearchChange = (e) => {
-    const value = e.target.value;
+    const value = e.target.value.trim();
     setSearchTerm(value);
 
-    if (value.trim() === "") {
+    if (value === "") {
       setFilteredBookings(bookings);
     } else {
-      const filtered = bookings.filter(
-        (booking) =>
-          (booking.name &&
-            booking.name.toLowerCase().includes(value.toLowerCase())) ||
-          (booking.serviceType &&
-            booking.serviceType.toLowerCase().includes(value.toLowerCase()))
-      );
+      const filtered = bookings.filter((booking) => {
+        const lowerSearchTerm = value.toLowerCase();
+        if (searchField === "name") {
+          const firstName = booking.name ? booking.name.split(" ")[0].toLowerCase() : "";
+          return firstName.includes(lowerSearchTerm);
+        } else if (searchField === "appliance") {
+          const applianceType = booking.serviceType ? booking.serviceType.toLowerCase() : "";
+          return applianceType.includes(lowerSearchTerm);
+        } else if (searchField === "orderNumber") {
+          const orderNumber = booking.orderNumber || booking.bookingReference || `rep-${booking._id?.substring(0, 8) || "n/a"}`;
+          return orderNumber.toLowerCase().includes(lowerSearchTerm);
+        }
+        return false;
+      });
       setFilteredBookings(filtered);
     }
   };
 
-  // Calculate the current step based on status
+  const handleSearchFieldChange = (e) => {
+    setSearchField(e.target.value);
+    setSearchTerm("");
+    setFilteredBookings(bookings);
+  };
+
   const getCurrentStatus = (status) => {
     switch (status) {
       case "pending":
@@ -74,35 +102,47 @@ const RepairTrackingPage = () => {
     }
   };
 
-  // Function to generate and download PDF report
+  const getTechnicianName = (booking) => {
+    console.log("Booking technicianAssigned:", booking.technicianAssigned); // Add debugging
+    // If technicianAssigned is populated with firstName and lastName
+    if (booking.technicianAssigned && typeof booking.technicianAssigned === 'object') {
+      if (booking.technicianAssigned.firstName) {
+        return `${booking.technicianAssigned.firstName} ${booking.technicianAssigned.lastName}`;
+      }
+      if (booking.technicianAssigned.name) {
+        return booking.technicianAssigned.name;
+      }
+    }
+    // If technicianAssigned is just an ID, use the technicians map
+    if (booking.technicianAssigned && typeof booking.technicianAssigned === 'string') {
+      return technicians[booking.technicianAssigned] || "Not assigned yet";
+    }
+    return "Not assigned yet";
+  };
+
   const generateReport = () => {
     try {
-      console.log("Generate Report triggered");
-      console.log("Filtered Bookings:", filteredBookings);
-
       if (!filteredBookings || filteredBookings.length === 0) {
         alert("No bookings available to generate a report.");
         return;
       }
 
       const doc = new jsPDF();
-      console.log("jsPDF instance created");
-
-      // Add header
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(0, 102, 204); // Blue color for title
+      doc.setTextColor(0, 102, 204);
       doc.text("Repair Service Report", 105, 20, { align: "center" });
 
-      // Add "Generated for" and date
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(0, 0, 0); // Black color for text
-      doc.text(`Generated for: ${searchTerm || "All Customers"}`, 14, 30);
+      doc.setTextColor(0, 0, 0);
+      const generatedFor = searchTerm
+        ? `Filtered by ${searchField === "name" ? "First Name" : searchField === "appliance" ? "Appliance Type" : "Order Number"}: ${searchTerm}`
+        : "All Customers";
+      doc.text(`Generated for: ${generatedFor}`, 14, 30);
       const currentDate = new Date().toLocaleDateString();
       doc.text(`Date: ${currentDate}`, 14, 40);
 
-      // Define table columns and data
       const tableColumn = [
         "Order Number",
         "Name",
@@ -117,11 +157,12 @@ const RepairTrackingPage = () => {
         if (!booking) {
           throw new Error("Invalid booking data found");
         }
+        const orderNumber = booking.orderNumber || booking.bookingReference || `REP-${booking._id?.substring(0, 8) || "N/A"}`;
         return [
-          booking.orderNumber || `REP-${booking._id?.substring(0, 8) || "N/A"}`,
+          orderNumber,
           booking.name || "N/A",
           booking.serviceType === "refrigerator"
-            ? "Samsung Refrigerator"
+            ? "Refrigerator"
             : (booking.serviceType || "N/A").replace(/-/g, " "),
           booking.preferredDate
             ? new Date(booking.preferredDate).toISOString().split("T")[0]
@@ -133,14 +174,11 @@ const RepairTrackingPage = () => {
                 .toISOString()
                 .split("T")[0]
             : "N/A",
-          booking.technician || "Not assigned yet",
+          getTechnicianName(booking),
           getCurrentStatus(booking.status).text,
         ];
       });
 
-      console.log("Table rows prepared:", tableRows);
-
-      // Generate table using autoTable
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
@@ -151,31 +189,30 @@ const RepairTrackingPage = () => {
           overflow: "linebreak",
         },
         headStyles: {
-          fillColor: [0, 102, 204], // Blue header
-          textColor: [255, 255, 255], // White text
+          fillColor: [0, 102, 204],
+          textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
         },
         bodyStyles: {
-          fillColor: [255, 255, 255], // White background for rows
-          textColor: [0, 0, 0], // Black text
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
           halign: "left",
         },
         alternateRowStyles: {
-          fillColor: [240, 248, 255], // Light blue for alternate rows
+          fillColor: [240, 248, 255],
         },
         columnStyles: {
-          0: { halign: "center" }, // Order Number
-          1: { halign: "left" }, // Name
-          2: { halign: "left" }, // Appliance
-          3: { halign: "center" }, // Scheduled Date
-          4: { halign: "center" }, // Est. Completion
-          5: { halign: "left" }, // Technician
-          6: { halign: "center" }, // Status
+          0: { halign: "center" },
+          1: { halign: "left" },
+          2: { halign: "left" },
+          3: { halign: "center" },
+          4: { halign: "center" },
+          5: { halign: "left" },
+          6: { halign: "center" },
         },
         margin: { top: 50 },
         didDrawPage: (data) => {
-          // Add footer with page number
           const pageCount = doc.internal.getNumberOfPages();
           for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
@@ -190,9 +227,10 @@ const RepairTrackingPage = () => {
         },
       });
 
-      console.log("Table generated, downloading PDF...");
-      // Download the PDF
-      doc.save(`repair_report_${searchTerm || "all"}_${currentDate}.pdf`);
+      const fileName = searchTerm
+        ? `repair_report_${searchField}_${searchTerm}_${currentDate}.pdf`
+        : `repair_report_all_${currentDate}.pdf`;
+      doc.save(fileName);
     } catch (err) {
       console.error("Error generating report:", err);
       alert("Failed to generate report: " + err.message);
@@ -201,28 +239,35 @@ const RepairTrackingPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header/>
-
+      <Header />
       <div className="flex-grow py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
-          {/* Track Your Repair Header */}
           <div className="bg-blue-600 text-white p-6 rounded-t-lg">
             <h1 className="text-2xl font-bold">Track Your Repair</h1>
             <p className="text-blue-100 text-sm mt-1">
               Monitor the status of your repair service
             </p>
           </div>
-
-          {/* Search Bar and Report Button */}
           <div className="bg-white p-4 shadow-md">
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                placeholder="Search by name or appliance type..."
-                className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              <div className="flex items-center gap-2 flex-grow">
+                <select
+                  value={searchField}
+                  onChange={handleSearchFieldChange}
+                  className="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="name">First Name</option>
+                  <option value="appliance">Appliance Type</option>
+                  <option value="orderNumber">Order Number</option>
+                </select>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  placeholder={`Search by ${searchField === "name" ? "first name" : searchField === "appliance" ? "appliance type" : "order number"}...`}
+                  className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
               <button
                 onClick={generateReport}
                 className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
@@ -230,22 +275,17 @@ const RepairTrackingPage = () => {
                 Generate Report
               </button>
             </div>
-
             {error && (
               <div className="mt-3 p-3 bg-red-50 text-red-700 border border-red-200 rounded-md">
                 {error}
               </div>
             )}
           </div>
-
-          {/* Loading State */}
           {loading && (
             <div className="text-center mt-6">
               <p>Loading bookings...</p>
             </div>
           )}
-
-          {/* No Bookings Found */}
           {!loading && filteredBookings.length === 0 && (
             <div className="text-center mt-6">
               <h2 className="text-xl font-bold text-gray-900">
@@ -253,28 +293,24 @@ const RepairTrackingPage = () => {
               </h2>
               <p className="mt-2 text-gray-600">
                 {searchTerm
-                  ? "No bookings match your search."
+                  ? `No bookings match your search for "${searchTerm}" in ${searchField === "name" ? "first name" : searchField === "appliance" ? "appliance type" : "order number"}.`
                   : "There are no bookings available."}
               </p>
             </div>
           )}
-
-          {/* Booking Cards */}
           {!loading &&
             filteredBookings.map((booking) => (
               <div
                 key={booking._id}
                 className="mt-6 bg-white p-4 shadow-md rounded-lg"
               >
-                {/* Repair Details */}
                 <div>
                   <h2 className="text-lg font-semibold mb-3">Repair Details</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Order Number</p>
                       <p className="font-medium">
-                        {booking.orderNumber ||
-                          `REP-${booking._id?.substring(0, 8) || "N/A"}`}
+                        {booking.orderNumber || booking.bookingReference || `REP-${booking._id?.substring(0, 8) || "N/A"}`}
                       </p>
                     </div>
                     <div>
@@ -320,18 +356,13 @@ const RepairTrackingPage = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Technician</p>
-                      <p className="font-medium">
-                        {booking.technician || "not assign yet"}
-                      </p>
+                      <p className="font-medium">{getTechnicianName(booking)}</p>
                     </div>
                   </div>
                 </div>
-
-                {/* Repair Status */}
                 <div className="mt-6">
                   <h2 className="text-lg font-semibold mb-4">Repair Status</h2>
                   <div className="space-y-6">
-                    {/* Status Step 1: Request Received */}
                     <div className="flex items-center">
                       <div
                         className={`rounded-full w-10 h-10 flex items-center justify-center mr-3 ${
@@ -357,13 +388,10 @@ const RepairTrackingPage = () => {
                       <div>
                         <h3 className="font-medium">Request Received</h3>
                         <p className="text-sm text-gray-600">
-                          Your repair request has been received and is being
-                          processed
+                          Your repair request has been received and is being processed
                         </p>
                       </div>
                     </div>
-
-                    {/* Status Step 2: Diagnosis Complete */}
                     <div className="flex items-center">
                       <div
                         className={`rounded-full w-10 h-10 flex items-center justify-center mr-3 ${
@@ -393,8 +421,6 @@ const RepairTrackingPage = () => {
                         </p>
                       </div>
                     </div>
-
-                    {/* Status Step 3: Repair in Progress */}
                     <div className="flex items-center">
                       <div
                         className={`rounded-full w-10 h-10 flex items-center justify-center mr-3 ${
@@ -424,8 +450,6 @@ const RepairTrackingPage = () => {
                         </p>
                       </div>
                     </div>
-
-                    {/* Status Step 4: Repair Completed */}
                     <div className="flex items-center">
                       <div
                         className={`rounded-full w-10 h-10 flex items-center justify-center mr-3 ${
@@ -461,7 +485,6 @@ const RepairTrackingPage = () => {
             ))}
         </div>
       </div>
-
       <Footer />
     </div>
   );
