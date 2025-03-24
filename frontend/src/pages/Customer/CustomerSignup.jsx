@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const CustomerSignup = () => {
   const [formData, setFormData] = useState({
@@ -9,11 +9,12 @@ const CustomerSignup = () => {
     password: '',
     confirmPassword: '',
     phone: '',
-    address: ''
+    address: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -26,30 +27,46 @@ const CustomerSignup = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
-    // Basic validation
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
       return;
     }
-    
+
     try {
-      // Replace with actual API call to your backend
-      console.log('Registering customer:', formData);
-      
-      // Simulate API call
-      setTimeout(() => {
-        setSuccess(true);
-        setLoading(false);
-        
-        // Redirect to login after successful registration (after showing success message)
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-      }, 1000);
+      const apiUrl = 'http://localhost:5000'; // Hardcoded API URL
+      console.log('API URL:', apiUrl);
+      console.log('Form data:', formData);
+
+      const response = await fetch(`${apiUrl}/api/auth/customer/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const contentType = response.headers.get('content-type');
+      const text = await response.text();
+      console.log('Response status:', response.status, 'Response text:', text);
+
+      if (!contentType?.includes('application/json')) {
+        throw new Error(`Server returned non-JSON response: ${text.substring(0, 100)}...`);
+      }
+
+      const data = JSON.parse(text);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      setSuccess(true);
+      setTimeout(() => navigate('/customer-login'), 2000);
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      console.error('Signup error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -61,22 +78,22 @@ const CustomerSignup = () => {
           <h2 className="text-2xl font-bold text-center text-white">Easy Fix</h2>
           <p className="text-center text-blue-100">Home Appliance Repair</p>
         </div>
-        
+
         <div className="p-6">
           <h3 className="text-xl font-semibold text-gray-700 mb-6 text-center">Create Customer Account</h3>
-          
+
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {error}
             </div>
           )}
-          
+
           {success && (
             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
               Account created successfully! Redirecting to login...
             </div>
           )}
-          
+
           {!success && (
             <form onSubmit={handleSubmit}>
               <div className="flex gap-4 mb-4">
@@ -89,13 +106,13 @@ const CustomerSignup = () => {
                     id="firstName"
                     type="text"
                     name="firstName"
-                    placeholder="eranga"
+                    placeholder="John"
                     value={formData.firstName}
                     onChange={handleChange}
                     required
                   />
                 </div>
-                
+
                 <div className="flex-1">
                   <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lastName">
                     Last Name
@@ -105,14 +122,14 @@ const CustomerSignup = () => {
                     id="lastName"
                     type="text"
                     name="lastName"
-                    placeholder="harsha"
+                    placeholder="Doe"
                     value={formData.lastName}
                     onChange={handleChange}
                     required
                   />
                 </div>
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
                   Email Address
@@ -122,13 +139,13 @@ const CustomerSignup = () => {
                   id="email"
                   type="email"
                   name="email"
-                  placeholder="eranga@gmail.com"
+                  placeholder="john@example.com"
                   value={formData.email}
                   onChange={handleChange}
                   required
                 />
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phone">
                   Phone Number
@@ -138,13 +155,13 @@ const CustomerSignup = () => {
                   id="phone"
                   type="tel"
                   name="phone"
-                  placeholder="+9412345678"
+                  placeholder="+1234567890"
                   value={formData.phone}
                   onChange={handleChange}
                   required
                 />
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
                   Address
@@ -154,13 +171,13 @@ const CustomerSignup = () => {
                   id="address"
                   name="address"
                   rows="2"
-                  placeholder="Enter your full address"
+                  placeholder="123 Main St"
                   value={formData.address}
                   onChange={handleChange}
                   required
                 ></textarea>
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
                   Password
@@ -176,7 +193,7 @@ const CustomerSignup = () => {
                   required
                 />
               </div>
-              
+
               <div className="mb-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="confirmPassword">
                   Confirm Password
@@ -192,17 +209,17 @@ const CustomerSignup = () => {
                   required
                 />
               </div>
-              
+
               <div className="mb-6">
                 <button
                   type="submit"
-                  className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
                   disabled={loading}
                 >
                   {loading ? 'Creating Account...' : 'Sign Up'}
                 </button>
               </div>
-              
+
               <div className="text-center">
                 <p className="text-sm text-gray-600">
                   Already have an account?{' '}

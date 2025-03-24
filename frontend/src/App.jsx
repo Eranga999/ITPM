@@ -51,7 +51,7 @@ function App() {
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/customer-login" element={<CustomerLogin />} />
         <Route path="/customer-signup" element={<CustomerSignup />} />
-        
+        <Route path="/forgot-password" element={<div>Forgot Password Page</div>} />
         
         <Route path='/booking-form' element={<BookingForm />} />
         <Route path='/tracking' element={<Tracking />} />
