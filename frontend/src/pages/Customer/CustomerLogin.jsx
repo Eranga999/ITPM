@@ -55,7 +55,7 @@ const CustomerLogin = () => {
       localStorage.setItem('role', data.data.user.role);
 
       if (data.data.user.role === 'customer') {
-        navigate('/');
+        navigate('/home');
       } else {
         setError('Unexpected role. Please contact support.');
       }
