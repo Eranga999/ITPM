@@ -43,15 +43,15 @@ function App() {
     <Router>
       <Routes>
         {/* Default Route Redirects to Login */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<CustomerLogin />} />
 
         <Route path="/staff-login" element={<StaffLogin />} />
         
         {/* Customer Dashboard */}
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-        <Route path="/customer-login" element={<CustomerLogin />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/customer-signup" element={<CustomerSignup />} />
-        
+        <Route path="/forgot-password" element={<div>Forgot Password Page maintance</div>} />
         
         <Route path='/booking-form' element={<BookingForm />} />
         <Route path='/tracking' element={<Tracking />} />
