@@ -1,27 +1,116 @@
-// CustomerProfile.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const CustomerProfile = () => {
   const [formData, setFormData] = useState({
-    firstName: 'ERANGA',
-    lastName: 'HARSHA',
-    email: 'eranga@gmail.com',
-    phone: '1234567890',
-    address: 'colombo',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchCustomerProfile = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication token missing. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/customer/profile', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const contentType = response.headers.get('Content-Type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.log('Non-JSON response:', text);
+          throw new Error('Server did not return JSON. Check the endpoint or server status.');
+        }
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to fetch profile');
+        }
+
+        setFormData({
+          firstName: data.data.firstName || '',
+          lastName: data.data.lastName || '',
+          email: data.data.email || '',
+          phone: data.data.phone || '',
+          address: data.data.address || '',
+        });
+      } catch (err) {
+        setError(err.message || 'Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomerProfile();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form Submitted:', formData);
-    setIsSubmitted(true);
-    setTimeout(() => setIsSubmitted(false), 3000); // Hide after 3 seconds
-    // TODO: Submit to backend
+    setIsSubmitted(false);
+    setError('');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Authentication token missing. Please log in again.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/customer/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.log('Non-JSON response:', text);
+        throw new Error('Server did not return JSON. Check the endpoint or server status.');
+      }
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update profile');
+      }
+
+      console.log('Profile updated successfully:', data.data);
+      setIsSubmitted(true);
+      setTimeout(() => setIsSubmitted(false), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to update profile');
+    }
   };
+
+  if (loading) {
+    return <div className="text-center">Loading profile...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center">{error}</div>;
+  }
 
   return (
     <div className="max-w-3xl mx-auto bg-white bg-opacity-95 p-8 rounded-xl shadow-lg border border-gray-100">
@@ -31,6 +120,11 @@ const CustomerProfile = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           <span>Profile updated successfully!</span>
+        </div>
+      )}
+      {error && (
+        <div className="mb-6 p-4 bg-red-100 text-red-800 rounded-lg flex items-center space-x-2">
+          <span>{error}</span>
         </div>
       )}
       <div className="flex items-center justify-between mb-8">
