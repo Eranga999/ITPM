@@ -23,6 +23,7 @@ import ServiceCenterDashboard from './pages/ServiceCenter/ServiceCenterDashboard
 import CustomerLogin from './pages/Customer/CustomerLogin';
 import CustomerSignup from './pages/Customer/CustomerSignup';
 import StaffLogin from './pages/StaffLogin';
+import Settings from './components/CustomerComponent/Settings';
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -57,7 +58,7 @@ function App() {
         <Route path='/tracking' element={<Tracking />} />
         <Route path="/edit-booking" element={<RepairChanges />} />
         <Route path="/support" element={<Support />} />
-
+        <Route path="/settings" element={<Settings />} />
         <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
         <Route path="/technician-dashboard/pending-jobs" element={<PendingJobs />} />
         <Route path="/technician-dashboard/completed-jobs" element={<CompletedJobs />} />

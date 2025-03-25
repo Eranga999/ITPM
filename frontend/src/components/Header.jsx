@@ -15,7 +15,7 @@ function Header() {
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200">Home</Link>
+            <Link to="/home" className="font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200">Home</Link>
             <Link to="/booking-form" className="font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200">Book Repair</Link>
             <Link to="/support" className="font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200">Support</Link>
             <Link to="/customer-dashboard" className="flex items-center space-x-2 font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200">
@@ -45,7 +45,7 @@ function Header() {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <nav className="mt-4 md:hidden pb-4 space-y-3">
-            <Link to="/" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Home</Link>
+            <Link to="/home" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Home</Link>
             <Link to="/booking-form" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Book Repair</Link>
             <Link to="/support" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Support</Link>
             <Link to="/customer-dashboard" className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg">Account</Link>
