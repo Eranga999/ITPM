@@ -1,5 +1,5 @@
 import React from "react";
-import CustomerProfile from "../../components/CustomerComponent/Customerprofile";
+import CustomerProfile from "../../components/CustomerComponent/CustomerProfile";
 import CusDashboardNavigationBar from "../../components/CustomerComponent/CusDashboardNavigationBar";
 import Header from '../../components/Header';
 import Footer from '../../components/footer';

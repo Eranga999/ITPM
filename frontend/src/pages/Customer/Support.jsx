@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { FaPhone, FaEnvelope } from 'react-icons/fa';
 import Header from '../../components/Header';
 import Footer from '../../components/footer';
+import bgImage from '../../assets/image.jpg'; // Corrected path for src/pages/Support.js
 
 const Support = () => {
   const [formData, setFormData] = useState({
@@ -33,7 +33,7 @@ const Support = () => {
       const result = await response.json();
       if (result.success) {
         alert('Message sent successfully!');
-        setFormData({ name: '', email: '', subject: '', message: '' }); 
+        setFormData({ name: '', email: '', subject: '', message: '' });
       } else {
         alert('Failed to send message. Please try again.');
       }
@@ -48,28 +48,18 @@ const Support = () => {
       {/* Header */}
       <Header />
 
-      {/* Main Content */}
-      <main className="flex-1 bg-gray-50 py-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Section */}
-          <div className="bg-blue-600 text-white rounded-t-xl p-6">
-            <h2 className="text-3xl font-bold">Support Center</h2>
-            <p className="mt-2 text-blue-100">Get help and answers quickly</p>
-          </div>
+      {/* Main Content with Background Image */}
+      <main 
+        className="flex-1 relative bg-cover bg-center bg-no-repeat py-16"
+        style={{ backgroundImage: `url(${bgImage})` }} // Use imported image
+      >
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Support Box with Glass Effect */}
+          <div className="rounded-xl shadow-lg p-8 backdrop-blur-md bg-white/20 border border-white/30">
+            <h2 className="text-3xl font-bold text-blue-600 text-center">Support Center</h2>
+            <p className="mt-2 text-gray-600 text-center">Get help and answers quickly</p>
 
-          {/* Tabs */}
-          <div className="bg-white border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              <button className="py-4 text-blue-600 border-b-2 border-blue-600 font-medium">
-                Contact Us
-              </button>
- 
-            </nav>
-          </div>
-
-          {/* Main Content */}
-          <div className="bg-white rounded-b-xl shadow-md p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
               {/* Contact Info */}
               <div className="space-y-6">
                 {/* Phone Support */}
@@ -80,7 +70,7 @@ const Support = () => {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800">Phone</h3>
                     <p className="text-gray-600">Available 24/7 for emergencies</p>
-                    <p className="text-blue-600 font-medium mt-1">(+94)766876638 </p>
+                    <p className="text-blue-600 font-medium mt-1">(+94) 766876638</p>
                   </div>
                 </div>
 
@@ -97,7 +87,7 @@ const Support = () => {
                 </div>
               </div>
 
-              {/* Form */}
+              {/* Contact Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                   <div>
