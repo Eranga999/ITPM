@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from '../Header';
 import Footer from '../footer';
-import editbooking from '../../assets/editbooking.jpg'; // Import the background image
 
 // Toast Notification Component
 const Toast = ({ message, type, onClose }) => {
@@ -458,7 +457,6 @@ const RepairChanges = () => {
       {/* Main Content with Background Image */}
       <div 
         className="min-h-screen py-12 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${editbooking})` }}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           {/* Main Container with Semi-Transparent Background for Readability */}
