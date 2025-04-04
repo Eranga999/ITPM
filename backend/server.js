@@ -9,6 +9,7 @@ import serviceCenterRoutes from './routes/serviceCenterRoutes.js'
 import jobRoutes from './routes/jobRoutes.js';
 import transportRoutes from './routes/transportRoutes.js'; // New import
 import authRoutes from './routes/authRoutes.js';
+import instantFixRoutes from './routes/instantFixRoutes.js'; 
 dotenv.config();
 
 const app = express();
@@ -39,7 +40,7 @@ app.use('/api/admin', serviceCenterRoutes); // Mount technician routes under /ap
 app.use('/api/technician', jobRoutes);
 app.use('/api/transport', transportRoutes);
 app.use('/api', serviceCenterRoutes);
-
+app.use('/api/instant-fix', instantFixRoutes);
 app.get('/', (req, res) => {
   res.send('Easy Fix Backend Running!');
 });
