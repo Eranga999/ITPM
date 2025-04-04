@@ -1,16 +1,15 @@
-// models/FileModel.js
 import mongoose from 'mongoose';
 
 const fileSchema = new mongoose.Schema({
-  originalName: {
+  fileName: {
     type: String,
     required: true,
   },
-  filePath: {
-    type: String,
+  fileId: {
+    type: mongoose.Schema.Types.ObjectId,  // This references the file in GridFS
     required: true,
   },
-  fileType: {
+  contentType: {
     type: String,
     required: true,
   },
@@ -18,12 +17,8 @@ const fileSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  uploadedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true });
 
-const FileModel = mongoose.model('File', fileSchema);
+const File = mongoose.model('File', fileSchema);
 
-export default FileModel;
+export default File;
