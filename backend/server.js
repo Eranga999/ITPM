@@ -31,7 +31,7 @@ mongoose
     console.error('MongoDB Connection Failed:', err.message);
     process.exit(1);
   });
-
+app.use('/api/auth', authRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', technicianRoutes);
@@ -39,7 +39,7 @@ app.use('/api/admin', serviceCenterRoutes); // Mount technician routes under /ap
 app.use('/api/technician', jobRoutes);
 app.use('/api/transport', transportRoutes);
 app.use('/api', serviceCenterRoutes);
-app.use('/api/auth', authRoutes);
+
 app.get('/', (req, res) => {
   res.send('Easy Fix Backend Running!');
 });

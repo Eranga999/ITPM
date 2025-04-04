@@ -34,19 +34,12 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-console.log('Imported authController:', authController);
-
-// Test route
-router.get('/test', (req, res) => {
-  res.json({ message: 'Auth routes are working!' });
-});
-
 // Customer routes
 router.post('/customer/register', authController.register);
 router.post('/customer/login', authController.login);
 
-// Fetch customer profile directly from MongoDB
 router.get('/customer/profile', authenticateToken, async (req, res) => {
+  console.log('GET /customer/profile called');
   try {
     const customer = await Customer.findById(req.user.id).select('-password');
     if (!customer) {
@@ -75,8 +68,8 @@ router.get('/customer/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Update customer profile
 router.put('/customer/profile', authenticateToken, async (req, res) => {
+  console.log('PUT /customer/profile called');
   try {
     const { firstName, lastName, email, phone, address } = req.body;
 
@@ -121,8 +114,8 @@ router.put('/customer/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Change customer password (Updated with updateOne)
 router.put('/customer/password', authenticateToken, async (req, res) => {
+  console.log('PUT /customer/password called');
   try {
     const { oldPassword, newPassword } = req.body;
 
@@ -152,7 +145,6 @@ router.put('/customer/password', authenticateToken, async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // Update directly, avoiding pre-save hook
     await Customer.updateOne(
       { _id: req.user.id },
       { $set: { password: hashedPassword } }
@@ -170,10 +162,38 @@ router.put('/customer/password', authenticateToken, async (req, res) => {
     });
   }
 });
+router.delete('/customer/profile', authenticateToken, async (req, res) => {
+  console.log('DELETE /customer/profile called');
+  console.log('Token:', req.headers['authorization']);
+  console.log('User ID:', req.user?.id);
+  try {
+    const customer = await Customer.findByIdAndDelete(req.user.id);
+    if (!customer) {
+      console.log('Customer not found for ID:', req.user.id);
+      return res.status(404).json({
+        success: false,
+        message: 'Customer not found',
+      });
+    }
+
+    console.log('Customer deleted:', customer);
+    res.status(200).json({
+      success: true,
+      message: 'Account deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting account:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete account',
+    });
+  }
+});
 
 // Staff routes
 router.post('/staff/login', authController.loginStaff);
 router.post('/staff/add', async (req, res) => {
+  console.log('POST /staff/add called');
   try {
     const { email, password, userType } = req.body;
 
