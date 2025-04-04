@@ -4,7 +4,7 @@ import TechnicianDashboard from './pages/Technician/TechnicianDashboard';
 import HeroSection from './components/homepageComp/HeroSection';
 import ServicesSection from './components/homepageComp/ServicesSection';
 import HowItWorksSection from './components/homepageComp/HowItWorksSection';
-import Footer from './components/footer';
+import Footer from './components/Footer';
 import BookingForm from './components/CustomerComponent/BookingForm';
 import Tracking from './components/CustomerComponent/RepairTrackingPage';
 import Homeheader from './components/homepageComp/HomeHeader';
@@ -24,6 +24,7 @@ import CustomerLogin from './pages/Customer/CustomerLogin';
 import CustomerSignup from './pages/Customer/CustomerSignup';
 import StaffLogin from './pages/StaffLogin';
 import Settings from './components/CustomerComponent/Settings';
+import InstantFixMode from './components/CustomerComponent/InstantFixMode';
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -53,7 +54,7 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/customer-signup" element={<CustomerSignup />} />
         <Route path="/forgot-password" element={<div>Forgot Password Page maintance</div>} />
-        
+        <Route path="/instant-fix" element={<InstantFixMode />} />
         <Route path='/booking-form' element={<BookingForm />} />
         <Route path='/tracking' element={<Tracking />} />
         <Route path="/edit-booking" element={<RepairChanges />} />
