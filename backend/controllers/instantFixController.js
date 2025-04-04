@@ -1,8 +1,8 @@
 import { MongoClient, GridFSBucket } from 'mongodb';
-import FixRequest from '../models/FixRequest.js';
-import File from '../models/File.js';  // Import the new File model
+import FixRequest from '../models/InstantFix.js';
+import File from '../models/FileModel.js';  // Import the new File model
 
-const mongoURI = process.env.MONGODB_URI;  // Make sure to set your MongoDB URI in the environment file
+const mongoURI = process.env.MONGODB_URL;  // Make sure to set your MongoDB URI in the environment file
 
 // Submit Fix Request
 export const submitFixRequest = async (req, res) => {

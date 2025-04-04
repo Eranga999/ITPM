@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const instantFixSchema = new mongoose.Schema({
   applianceType: String,
@@ -8,4 +8,7 @@ const instantFixSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('InstantFix', instantFixSchema);
+// Create and export the model using the schema
+const InstantFix = mongoose.model('InstantFix', instantFixSchema);
+
+export default InstantFix;
