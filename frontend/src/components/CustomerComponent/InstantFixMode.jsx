@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";  // Importing useNavigate from react-router-dom
+import { useNavigate } from "react-router-dom";
+import Header from '../Header'; 
+import Footer from '../Footer'; 
 
 const issuesByType = {
   Refrigerator: ["Not Cooling", "Leaking Water", "Strange Noise"],
@@ -14,6 +16,7 @@ const issuesByType = {
   "Water Heater": ["No Hot Water", "Leaking", "Strange Odor"],
   "Vacuum Cleaner": ["No Suction", "Brush Not Spinning", "Overheating"],
 };
+
 const fixTips = {
   "Refrigerator-Not Cooling": {
     text: "Check if the thermostat is set correctly. Make sure the vents aren't blocked.",
@@ -146,6 +149,7 @@ const fixTips = {
   },
 };
 
+
 const InstantFixMode = () => {
   const [type, setType] = useState("");
   const [issue, setIssue] = useState("");
@@ -153,7 +157,7 @@ const InstantFixMode = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();  // Initialize useNavigate hook
+  const navigate = useNavigate();
 
   const handleTypeChange = (e) => {
     setType(e.target.value);
@@ -197,85 +201,137 @@ const InstantFixMode = () => {
   };
 
   const handleTechnicianRequest = () => {
-    // Navigate to the booking-form route
     navigate("/support");
   };
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow max-w-xl mx-auto mt-10">
-      <h2 className="text-2xl font-bold mb-4 text-center">Instant Fix Mode</h2>
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
+      {/* Your Existing Header */}
+      <Header />
 
-      <div className="space-y-4">
-        <div>
-          <label className="block font-semibold">Appliance Type</label>
-          <select
-            className="w-full border rounded p-2"
-            value={type}
-            onChange={handleTypeChange}
-          >
-            <option value="">Select Type</option>
-            {Object.keys(issuesByType).map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </div>
+      {/* Main Content */}
+      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-lg w-full bg-white rounded-2xl shadow-xl p-8 transform transition-all hover:scale-105 duration-300">
+          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-6">
+            Instant Fix Mode
+          </h2>
 
-        {type && (
-          <div>
-            <label className="block font-semibold">Issue</label>
-            <select
-              className="w-full border rounded p-2"
-              value={issue}
-              onChange={handleIssueChange}
-            >
-              <option value="">Select Issue</option>
-              {issuesByType[type].map((i) => (
-                <option key={i}>{i}</option>
-              ))}
-            </select>
-          </div>
-        )}
+          <div className="space-y-6">
+            {/* Appliance Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Appliance Type
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                value={type}
+                onChange={handleTypeChange}
+              >
+                <option value="">Select Type</option>
+                {Object.keys(issuesByType).map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div>
-          <label className="block font-semibold">Upload Image/Audio</label>
-          <input type="file" onChange={handleFileChange} />
-          {fileName && <p className="text-sm text-gray-500 mt-1">Uploaded: {fileName}</p>}
-        </div>
-
-        {diagnosis && (
-          <div className="bg-green-100 text-green-800 p-3 rounded mt-4">
-            <strong>Possible Fix:</strong> {diagnosis.text}
-            {diagnosis.video && (
-              <div className="mt-3">
-                <iframe
-                  width="100%"
-                  height="220"
-                  src={diagnosis.video}
-                  title="Fix Tutorial"
-                  allowFullScreen
-                ></iframe>
+            {/* Issue */}
+            {type && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Issue
+                </label>
+                <select
+                  className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                  value={issue}
+                  onChange={handleIssueChange}
+                >
+                  <option value="">Select Issue</option>
+                  {issuesByType[type].map((i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
+
+            {/* File Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Upload Image/Audio
+              </label>
+              <div className="relative">
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-200"
+                />
+                {fileName && (
+                  <p className="mt-2 text-sm text-gray-600">
+                    Uploaded: <span className="font-medium">{fileName}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Diagnosis */}
+            {diagnosis && (
+              <div className="bg-green-50 text-green-800 p-4 rounded-lg shadow-inner animate-fade-in">
+                <strong className="block text-lg font-semibold mb-2">
+                  Possible Fix:
+                </strong>
+                <p>{diagnosis.text}</p>
+                {diagnosis.video && (
+                  <div className="mt-4">
+                    <iframe
+                      width="100%"
+                      height="200"
+                      src={diagnosis.video}
+                      title="Fix Tutorial"
+                      allowFullScreen
+                      className="rounded-lg shadow-md"
+                    ></iframe>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+              <button
+                onClick={handleSubmit}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transform hover:scale-105 transition duration-200"
+              >
+                Submit Fix Request
+              </button>
+              <button
+                onClick={handleTechnicianRequest}
+                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transform hover:scale-105 transition duration-200"
+              >
+                Contact Support Center
+              </button>
+            </div>
+
+            {/* Message */}
+            {message && (
+              <p
+                className={`text-center text-sm mt-4 ${
+                  message.includes("successfully")
+                    ? "text-green-600"
+                    : "text-red-600"
+                } animate-fade-in`}
+              >
+                {message}
+              </p>
+            )}
           </div>
-        )}
-
-        <div className="flex gap-4 mt-4">
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-            onClick={handleSubmit}
-          >
-            Submit Fix Request
-          </button>
-          <button
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-            onClick={handleTechnicianRequest}  // Call the function to navigate to the booking form
-          >
-            contact supportcenter
-          </button>
         </div>
+      </main>
 
-        {message && <p className="text-center mt-3 text-sm text-gray-700">{message}</p>}
-      </div>
+      <Footer />
+     
     </div>
   );
 };
