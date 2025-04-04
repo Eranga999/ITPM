@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import Header from '../Header';
-import Footer from '../footer';
+import Footer from '../Footer';
 
-// Toast Notification Component
 const Toast = ({ message, type, onClose }) => {
   return (
     <div 

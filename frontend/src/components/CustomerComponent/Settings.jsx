@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
-import Footer from '../footer';
+import Footer from '../Footer';
 const Settings = () => {
   // Initialize isDarkMode from localStorage, default to false (light mode) if not set
   const [passwordData, setPasswordData] = useState({
