@@ -321,7 +321,7 @@ const RepairTrackingPage = () => {
                       <p className="text-sm text-gray-500">Appliance</p>
                       <p className="font-medium capitalize">
                         {booking.serviceType === "refrigerator"
-                          ? "Samsung Refrigerator"
+                          ? " Refrigerator"
                           : (booking.serviceType || "N/A").replace(/-/g, " ")}
                       </p>
                     </div>
