@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Loginheader from '../../components/Loginheader';
-import Footer from '../../components/footer';
+import Footer from '../../components/Footer';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock } from 'react-icons/fa';
 
 const CustomerLogin = () => {

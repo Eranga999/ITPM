@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaPhone, FaEnvelope } from 'react-icons/fa';
 import Header from '../../components/Header';
-import Footer from '../../components/footer';
+import Footer from '../../components/Footer';
 import bgImage from '../../assets/image.jpg'; // Corrected path for src/pages/Support.js
 
 const Support = () => {

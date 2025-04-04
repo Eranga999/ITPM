@@ -10,7 +10,7 @@ const CusDashboardNavigationBar = () => {
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem('token'); // Clear the token
-    navigate('/login'); // Redirect to login page
+    navigate('/'); // Redirect to login page
   };
 
   return (
