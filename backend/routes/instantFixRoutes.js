@@ -1,7 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import path from 'path';
-import { submitFixRequest, getAllRequests } from '../controllers/instantFixController.js';  // ES module import
+import { submitFixRequest, getAllRequests } from '../controllers/instantFixController.js';
 
 const router = express.Router();
 
@@ -14,9 +13,10 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}-${file.originalname}`);
   }
 });
+
 const upload = multer({ storage });
 
-// Routes
+// Define routes
 router.post('/submit', upload.single('file'), submitFixRequest);
 router.get('/all', getAllRequests);
 
