@@ -20,135 +20,130 @@ const issuesByType = {
 const fixTips = {
   "Refrigerator-Not Cooling": {
     text: "Check if the thermostat is set correctly. Make sure the vents aren't blocked.",
-    video: "https://www.youtube.com/embed/Y2J6fRr9aYw", // Example video link
+    video: "https://www.youtube.com/embed/J4FSLDQ0swY", 
   },
   "Refrigerator-Leaking Water": {
     text: "Ensure the door seal is intact and the defrost drain is clear.",
-    video: "https://www.youtube.com/embed/FdALddmjxdg", // Example video link
+    video: "https://www.youtube.com/embed/0DcQMhwOyaY", 
   },
   "Refrigerator-Strange Noise": {
     text: "Check for any items blocking the fan or condenser coils.",
-    video: "https://www.youtube.com/embed/F4lzFPVTTUs", // Example video link
+    video: "https://www.youtube.com/embed/ajZV4QikwpA", 
   },
   
   "Washing Machine-Not Spinning": {
     text: "Could be due to an unbalanced load or a faulty lid switch.",
-    video: "https://www.youtube.com/embed/EdZ9r8VdyVQ", // Example video link
+    video: "https://www.youtube.com/embed/_fHoAjOmHDU", 
   },
   "Washing Machine-Water Not Draining": {
     text: "Check the drain hose for clogs and the pump filter.",
-    video: "https://www.youtube.com/embed/cCZt2STtZf8", // Example video link
+    video: "https://www.youtube.com/embed/WxNRAMWDY2w", 
   },
   "Washing Machine-Vibrates Excessively": {
     text: "Ensure the washer is level, and check for any imbalance in the load.",
-    video: "https://www.youtube.com/embed/QEFsv06WGlI", // Example video link
+    video: "https://www.youtube.com/embed/RcczqrA0Uqw", 
   },
   
   "Dryer-Not Heating": {
     text: "Heating element might be broken. Also check the thermal fuse.",
-    video: "https://www.youtube.com/embed/hfATu8kz8hE", // Example video link
+    video: "https://www.youtube.com/embed/S9KaJeV_bMQ", 
   },
   "Dryer-Takes Too Long": {
     text: "Check the vent for blockages, and make sure the dryer is not overloaded.",
-    video: "https://www.youtube.com/embed/yHZ8M0e_eF8", // Example video link
+    video: "https://www.youtube.com/embed/LomsPjO4uew", 
   },
   "Dryer-Makes Noise": {
     text: "Check for foreign objects in the drum and inspect the drum belt.",
-    video: "https://www.youtube.com/embed/2PS7z9rhKZQ", // Example video link
+    video: "https://www.youtube.com/embed/BqjBtF9v4o8", 
   },
 
-  "Dishwasher-Not Cleaning": {
-    text: "Check if the spray arms are clogged. Ensure water pressure is sufficient.",
-    video: "https://www.youtube.com/embed/vD3Xy4aF5Ho", // Example video link
-  },
-  "Dishwasher-Leaking": {
-    text: "Check the door seal and ensure that the water inlet valve is functioning.",
-    video: "https://www.youtube.com/embed/z8TIS2UO69k", // Example video link
-  },
-  "Dishwasher-Bad Smell": {
-    text: "Run an empty cycle with vinegar to clean the dishwasher and check the drain for clogs.",
-    video: "https://www.youtube.com/embed/Q0RcnHph0r8", // Example video link
-  },
-
-  "Oven-Not Heating": {
-    text: "Ensure the heating element is intact and the oven's thermostat is working.",
-    video: "https://www.youtube.com/embed/aM2jw1k08ps", // Example video link
-  },
-  "Oven-Uneven Cooking": {
-    text: "Check the oven's calibration and ensure proper airflow inside the oven.",
-    video: "https://www.youtube.com/embed/ewdVuWSB2NQ", // Example video link
-  },
-  "Oven-Broken Door": {
-    text: "Check if the door seal is damaged, and inspect the hinges for wear.",
-    video: "https://www.youtube.com/embed/kFOti3f78tM", // Example video link
-  },
-
-  "Microwave-No Power": {
-    text: "Check the power supply, fuse, and door switch.",
-    video: "https://www.youtube.com/embed/m6w6k9Z_rFc", // Example video link
-  },
-  "Microwave-Sparks Inside": {
-    text: "Check for metal objects or foil inside the microwave, and ensure the waveguide cover is intact.",
-    video: "https://www.youtube.com/embed/TARZn5lfBdc", // Example video link
-  },
-  "Microwave-Buttons Not Working": {
-    text: "Try resetting the microwave or check for faulty control board connections.",
-    video: "https://www.youtube.com/embed/Q3fPqdc_v70", // Example video link
-  },
-
-  "Air Conditioner-Not Cooling": {
-    text: "Check the air filter and ensure the refrigerant level is correct.",
-    video: "https://www.youtube.com/embed/QgL-PRRZ2NY", // Example video link
-  },
-  "Air Conditioner-Water Leak": {
-    text: "Check the drainage system and ensure the filter is clean.",
-    video: "https://www.youtube.com/embed/FuBYzmG9Wuw", // Example video link
-  },
-  "Air Conditioner-Strange Smell": {
-    text: "Clean the filter and check for mold or mildew inside the unit.",
-    video: "https://www.youtube.com/embed/2ykjd8fHjP8", // Example video link
-  },
-
-  "Heater-No Heat": {
-    text: "Check the thermostat, heating elements, and circuit breakers.",
-    video: "https://www.youtube.com/embed/ZVdEqLps2_A", // Example video link
-  },
-  "Heater-Strange Sound": {
-    text: "Check for air trapped in the system or a faulty blower motor.",
-    video: "https://www.youtube.com/embed/KxgdhmUvOBQ", // Example video link
-  },
-  "Heater-Not Turning On": {
-    text: "Check the power supply and ensure the thermostat is set correctly.",
-    video: "https://www.youtube.com/embed/kL39pZgDh-Q", // Example video link
-  },
-
-  "Water Heater-No Hot Water": {
-    text: "Check the thermostat setting and ensure the heating element is not faulty.",
-    video: "https://www.youtube.com/embed/3KjFw8hcohM", // Example video link
-  },
-  "Water Heater-Leaking": {
-    text: "Check the water connections for leaks and inspect the pressure relief valve.",
-    video: "https://www.youtube.com/embed/ZUroJwvz25Y", // Example video link
-  },
-  "Water Heater-Strange Odor": {
-    text: "Flush the tank to remove any sediment buildup and check the anode rod.",
-    video: "https://www.youtube.com/embed/F9DN6dO-0dI", // Example video link
-  },
-
-  "Vacuum Cleaner-No Suction": {
-    text: "Check the hose for clogs and the filter for cleanliness.",
-    video: "https://www.youtube.com/embed/L2P-TKsztdM", // Example video link
-  },
-  "Vacuum Cleaner-Brush Not Spinning": {
-    text: "Inspect the brush for debris and check the motor or belt.",
-    video: "https://www.youtube.com/embed/DpaZPtiuK58", // Example video link
-  },
-  "Vacuum Cleaner-Overheating": {
-    text: "Ensure the filters are clean and check the motor for overheating.",
-    video: "https://www.youtube.com/embed/O7oCwAt6O_M", // Example video link
-  },
-};
-
+  
+    "Dishwasher-Not Cleaning": {
+      "text": "Check if the spray arms are clogged. Ensure water pressure is sufficient.",
+      "video": "https://www.youtube.com/embed/S6xzsY_6mEc"
+    },
+    "Dishwasher-Leaking": {
+      "text": "Check the door seal and ensure that the water inlet valve is functioning.",
+      "video": "https://www.youtube.com/embed/GC3ZiTR6mUw"
+    },
+    "Dishwasher-Bad Smell": {
+      "text": "Run an empty cycle with vinegar to clean the dishwasher and check the drain for clogs.",
+      "video": "https://www.youtube.com/embed/FYHCT65m-3A"
+    },
+    "Oven-Not Heating": {
+      "text": "Ensure the heating element is intact and the oven's thermostat is working.",
+      "video": "https://www.youtube.com/embed/96s7maybHlY"
+    },
+    "Oven-Uneven Cooking": {
+      "text": "Check the oven's calibration and ensure proper airflow inside the oven.",
+      "video": "https://www.youtube.com/embed/jB9SBT9gsdY"
+    },
+    "Oven-Broken Door": {
+      "text": "Check if the door seal is damaged, and inspect the hinges for wear.",
+      "video": "https://www.youtube.com/embed/OAXiVPQ1KV8"
+    },
+    "Microwave-No Power": {
+      "text": "Check the power supply, fuse, and door switch.",
+      "video": "https://www.youtube.com/embed/8i3iYtQOih4"
+    },
+    "Microwave-Sparks Inside": {
+      "text": "Check for metal objects or foil inside the microwave, and ensure the waveguide cover is intact.",
+      "video": "https://www.youtube.com/embed/60PoUf-u8Vk"
+    },
+    "Microwave-Buttons Not Working": {
+      "text": "Try resetting the microwave or check for faulty control board connections.",
+      "video": "https://www.youtube.com/embed/wRQ6yezhvXo"
+    },
+    "Air Conditioner-Not Cooling": {
+      "text": "Check the air filter and ensure the refrigerant level is correct.",
+      "video": "https://www.youtube.com/embed/Gfyk0qyAXlY"
+    },
+    "Air Conditioner-Water Leak": {
+      "text": "Check the drainage system and ensure the filter is clean.",
+      "video": "https://www.youtube.com/embed/brKBemwkRkI"
+    },
+    "Air Conditioner-Strange Smell": {
+      "text": "Clean the filter and check for mold or mildew inside the unit.",
+      "video": "https://www.youtube.com/embed/VWUJb0en-2c"
+    },
+    "Heater-No Heat": {
+      "text": "Check the thermostat, heating elements, and circuit breakers.",
+      "video": "https://www.youtube.com/embed/pJzP1jzYPqg"
+    },
+    "Heater-Strange Sound": {
+      "text": "Check for air trapped in the system or a faulty blower motor.",
+      "video": "https://www.youtube.com/embed/DhFUXwC59FU"
+    },
+    "Heater-Not Turning On": {
+      "text": "Check the power supply and ensure the thermostat is set correctly.",
+      "video": "https://www.youtube.com/embed/q7Kh2WwkSfQ"
+    },
+    "Water Heater-No Hot Water": {
+      "text": "Check the thermostat setting and ensure the heating element is not faulty.",
+      "video": "https://www.youtube.com/embed/054cRskeh5k"
+    },
+    "Water Heater-Leaking": {
+      "text": "Check the water connections for leaks and inspect the pressure relief valve.",
+      "video": "https://www.youtube.com/embed/u_MTFlN5Rjs"
+    },
+    "Water Heater-Strange Odor": {
+      "text": "Flush the tank to remove any sediment buildup and check the anode rod.",
+      "video": "https://www.youtube.com/embed/waficQobGnM"
+    },
+    "Vacuum Cleaner-No Suction": {
+      "text": "Check the hose for clogs and the filter for cleanliness.",
+      "video": "https://www.youtube.com/embed/T-LrgOQ7yjo"
+    },
+    "Vacuum Cleaner-Brush Not Spinning": {
+      "text": "Inspect the brush for debris and check the motor or belt.",
+      "video": "https://www.youtube.com/embed/t_IznrzBsJE"
+    },
+    "Vacuum Cleaner-Overheating": {
+      "text": "Ensure the filters are clean and check the motor for overheating.",
+      "video": "https://www.youtube.com/embed/VC9AKkafdN4"
+    }
+  
+}; 
 
 const InstantFixMode = () => {
   const [type, setType] = useState("");
