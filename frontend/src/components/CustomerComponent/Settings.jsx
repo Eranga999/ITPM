@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../Footer';
+
 const Settings = () => {
-  // Initialize isDarkMode from localStorage, default to false (light mode) if not set
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
     newPassword: '',
@@ -21,7 +21,6 @@ const Settings = () => {
   // Update localStorage whenever isDarkMode changes
   useEffect(() => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-    // Optionally, you can also update the document's class for global styling
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
 
@@ -92,7 +91,9 @@ const Settings = () => {
       setTimeout(() => {
         setPasswordChangeSuccess(false);
         localStorage.removeItem('token');
-        navigate('/');
+        localStorage.removeItem('role');
+        localStorage.removeItem('customerId');
+        navigate('/'); // Kept as original
       }, 3000);
     } catch (err) {
       setPasswordError(err.message || 'Failed to update password');
@@ -102,7 +103,9 @@ const Settings = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/');
+    localStorage.removeItem('role');
+    localStorage.removeItem('customerId');
+    navigate('/'); // Kept as original
   };
 
   const handleDeleteAccount = async () => {
@@ -143,8 +146,10 @@ const Settings = () => {
 
       console.log('Account deleted successfully:', data);
       localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('customerId');
       setIsLoading(false);
-      navigate('/');
+      navigate('/'); // Kept as original
     } catch (err) {
       setPasswordError(err.message || 'Failed to delete account');
       setIsLoading(false);

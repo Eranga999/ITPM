@@ -48,6 +48,7 @@ const CustomerLogin = () => {
 
       localStorage.setItem('token', data.data.token);
       localStorage.setItem('role', data.data.user.role);
+      localStorage.setItem('customerId', data.data.user.id); 
 
       if (data.data.user.role === 'customer') {
         navigate('/home');
