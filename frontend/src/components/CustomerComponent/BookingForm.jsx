@@ -31,7 +31,6 @@ const BookingForm = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = 'Full name is required';
     } else if (formData.name.length < 2 || formData.name.length > 50) {
@@ -40,14 +39,12 @@ const BookingForm = () => {
       newErrors.name = 'Name can only contain letters, spaces, and hyphens';
     }
 
-    // Email validation
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Phone validation
     if (!formData.phone) {
       newErrors.phone = 'Phone number is required';
     } else if (!/^\+?\d{0,15}$/.test(formData.phone)) {
@@ -56,19 +53,16 @@ const BookingForm = () => {
       newErrors.phone = 'Phone must be between 10 and 15 digits';
     }
 
-    // Address validation
     if (!formData.address.trim()) {
       newErrors.address = 'Address is required';
     } else if (formData.address.length < 10 || formData.address.length > 200) {
       newErrors.address = 'Address must be between 10 and 200 characters';
     }
 
-    // Service type validation
     if (!formData.serviceType) {
       newErrors.serviceType = 'Please select an appliance type';
     }
 
-    // Date validation
     if (!formData.preferredDate) {
       newErrors.preferredDate = 'Please select a date';
     } else {
@@ -81,12 +75,10 @@ const BookingForm = () => {
       }
     }
 
-    // Time validation
     if (formData.preferredTime && !['morning', 'afternoon', 'evening'].includes(formData.preferredTime)) {
       newErrors.preferredTime = 'Please select a valid time slot';
     }
 
-    // Description validation
     if (formData.description && formData.description.length > 1000) {
       newErrors.description = 'Description cannot exceed 1000 characters';
     }
@@ -98,26 +90,20 @@ const BookingForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Special handling for phone number to prevent invalid input
     if (name === 'phone') {
-      // Allow only digits and an optional "+" at the start
-      const cleanedValue = value.replace(/[^+\d]/g, ''); // Remove all characters except + and digits
+      const cleanedValue = value.replace(/[^+\d]/g, '');
       if (cleanedValue.startsWith('+')) {
-        // If it starts with +, ensure the rest are digits
         const rest = cleanedValue.slice(1);
-        if (!/^\d*$/.test(rest)) return; // If rest contains non-digits, don't update
+        if (!/^\d*$/.test(rest)) return;
       } else {
-        // If no +, ensure only digits
-        if (!/^\d*$/.test(cleanedValue)) return; // If contains non-digits, don't update
+        if (!/^\d*$/.test(cleanedValue)) return;
       }
-      // Limit length to 15 characters (including +)
       if (cleanedValue.length > 15) return;
       setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -138,8 +124,22 @@ const BookingForm = () => {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem('token'); // Get token from localStorage
+      if (!token) {
+        setSubmitStatus({
+          type: 'error',
+          message: 'Please log in to book a service',
+        });
+        setTimeout(() => navigate('/login'), 2000); // Redirect to login after 2 seconds
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.post('http://localhost:5000/api/bookings', formData, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Add token to headers
+        },
       });
 
       setFormData({
@@ -156,11 +156,20 @@ const BookingForm = () => {
       setShowSuccessPopup(true);
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Something went wrong';
-      setSubmitStatus({
-        type: 'error',
-        message: `Booking failed: ${errorMessage}`,
-      });
-      setTimeout(() => setSubmitStatus(null), 4000);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        setSubmitStatus({
+          type: 'error',
+          message: 'Session expired. Please log in again.',
+        });
+        localStorage.removeItem('token');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setSubmitStatus({
+          type: 'error',
+          message: `Booking failed: ${errorMessage}`,
+        });
+        setTimeout(() => setSubmitStatus(null), 4000);
+      }
     } finally {
       setLoading(false);
     }
@@ -173,7 +182,17 @@ const BookingForm = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+
+    // Check if user is logged in; if not, redirect to login
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please log in to book a service',
+      });
+      setTimeout(() => navigate('/login'), 2000);
+    }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-fixed bg-no-repeat flex flex-col"

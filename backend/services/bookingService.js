@@ -2,9 +2,9 @@
 import Booking from '../models/Booking.js';
 
 class BookingService {
-  async createBooking(bookingData) {
+  async createBooking(bookingData, customerId) {
     try {
-      console.log('Processing booking:', bookingData);
+      console.log('Processing booking:', bookingData, 'for customer:', customerId);
 
       bookingData.preferredDate = new Date(bookingData.preferredDate);
       if (bookingData.preferredDate < new Date().setHours(0, 0, 0, 0)) {
@@ -15,7 +15,8 @@ class BookingService {
         bookingData.preferredTime = null;
       }
 
-      const booking = new Booking(bookingData);
+      // Add customerId to bookingData
+      const booking = new Booking({ ...bookingData, customerId });
       const savedBooking = await booking.save();
       console.log('Booking created successfully:', savedBooking);
       return savedBooking;
@@ -25,11 +26,12 @@ class BookingService {
     }
   }
 
-  async getAllBookings() {
+  async getAllBookings(customerId) {
     try {
-      // Populate technicianAssigned with firstName and lastName
-      const bookings = await Booking.find().populate('technicianAssigned', 'firstName lastName');
-      console.log('Fetched bookings (backend):', JSON.stringify(bookings, null, 2)); // Add debugging
+      const bookings = await Booking.find({ customerId })
+        .populate('technicianAssigned', 'firstName lastName')
+        .sort({ preferredDate: 1 });
+      console.log('Fetched bookings for customer:', customerId, JSON.stringify(bookings, null, 2));
       return bookings;
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -37,37 +39,42 @@ class BookingService {
     }
   }
 
-  async getBookingById(id) {
+  async getBookingById(id, customerId) {
     try {
-      const booking = await Booking.findById(id).populate('technicianAssigned', 'firstName lastName');
-      if (!booking) throw new Error('Booking not found');
+      const booking = await Booking.findOne({ _id: id, customerId })
+        .populate('technicianAssigned', 'firstName lastName');
+      if (!booking) throw new Error('Booking not found or you do not have access');
       return booking;
     } catch (error) {
       console.error('Error fetching booking:', error);
-      throw new Error('Failed to get booking');
+      throw new Error(error.message || 'Failed to get booking');
     }
   }
 
-  async updateBooking(id, updatedData) {
+  async updateBooking(id, updatedData, customerId) {
     try {
       updatedData.preferredDate = new Date(updatedData.preferredDate);
-      const booking = await Booking.findByIdAndUpdate(id, updatedData, { new: true }).populate('technicianAssigned', 'firstName lastName');
-      if (!booking) throw new Error('Booking not found');
+      const booking = await Booking.findOneAndUpdate(
+        { _id: id, customerId },
+        updatedData,
+        { new: true }
+      ).populate('technicianAssigned', 'firstName lastName');
+      if (!booking) throw new Error('Booking not found or you do not have access');
       return booking;
     } catch (error) {
       console.error('Error updating booking:', error);
-      throw new Error('Failed to update booking');
+      throw new Error(error.message || 'Failed to update booking');
     }
   }
 
-  async deleteBooking(id) {
+  async deleteBooking(id, customerId) {
     try {
-      const result = await Booking.findByIdAndDelete(id);
-      if (!result) throw new Error('Booking not found');
+      const result = await Booking.findOneAndDelete({ _id: id, customerId });
+      if (!result) throw new Error('Booking not found or you do not have access');
       return { message: 'Booking deleted successfully' };
     } catch (error) {
       console.error('Error deleting booking:', error);
-      throw new Error('Failed to delete booking');
+      throw new Error(error.message || 'Failed to delete booking');
     }
   }
 }
