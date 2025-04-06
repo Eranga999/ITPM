@@ -113,14 +113,14 @@ const bookingSchema = new mongoose.Schema({
   },
   technicianAssigned: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Technician', // Must match the model name in models/Technician.js
+    ref: 'Technician',
     default: null,
     validate: {
       validator: async function (value) {
-        if (!value) return true; // Allow null
+        if (!value) return true;
         const Technician = mongoose.model('Technician');
         const technician = await Technician.findById(value);
-        return !!technician; // Ensure the technician exists
+        return !!technician;
       },
       message: 'Assigned technician must be a valid technician',
     },
@@ -132,13 +132,19 @@ const bookingSchema = new mongoose.Schema({
       return `BR${Date.now().toString(36)}${Math.random().toString(36).substr(2, 5)}`.toUpperCase();
     },
   },
+  customerId: { // Added field
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Customer',
+    required: [true, 'Customer ID is required'],
+  },
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true },
 });
 
-bookingSchema.index({ email: 1, preferredDate: 1 }, { 
+// Update indexes
+bookingSchema.index({ customerId: 1, preferredDate: 1 }, { 
   unique: true,
   partialFilterExpression: { status: { $ne: 'cancelled' } }
 });

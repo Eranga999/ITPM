@@ -1,3 +1,4 @@
+// routes/authRoutes.js
 import express from 'express';
 import authController from '../controllers/authController.js';
 import Staff from '../models/Staff.js';
@@ -11,7 +12,7 @@ dotenv.config();
 const router = express.Router();
 
 // Middleware to verify JWT token
-const authenticateToken = (req, res, next) => {
+export const authenticateToken = (req, res, next) => { // Add 'export' here
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -162,6 +163,7 @@ router.put('/customer/password', authenticateToken, async (req, res) => {
     });
   }
 });
+
 router.delete('/customer/profile', authenticateToken, async (req, res) => {
   console.log('DELETE /customer/profile called');
   console.log('Token:', req.headers['authorization']);
@@ -241,4 +243,4 @@ router.post('/staff/add', async (req, res) => {
   }
 });
 
-export default router;
+export default router; 

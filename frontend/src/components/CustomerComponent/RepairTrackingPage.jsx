@@ -1,4 +1,3 @@
-// RepairTrackingPage.jsx
 import { useState, useEffect } from "react";
 import Header from "../Header";
 import Footer from "../Footer";
@@ -20,26 +19,39 @@ const RepairTrackingPage = () => {
       setLoading(true);
       setError(null);
 
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Please log in to view repair tracking.");
+        setLoading(false);
+        return;
+      }
+
       try {
+        const config = {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        };
+
         // Fetch bookings and technicians simultaneously
         const [bookingResponse, technicianResponse] = await Promise.all([
-          axios.get("http://localhost:5000/api/bookings"),
-          axios.get("http://localhost:5000/api/admin/technicians"),
+          axios.get("http://localhost:5000/api/bookings", config),
+          axios.get("http://localhost:5000/api/admin/technicians", config),
         ]);
 
-        // Log the fetched bookings to debug
-        console.log("Bookings fetched (frontend):", bookingResponse.data);
+        // Handle bookings data
         const bookingData = bookingResponse.data.data || bookingResponse.data;
         if (!Array.isArray(bookingData)) {
           throw new Error("Fetched bookings data is not an array");
         }
+        console.log("Bookings fetched (frontend):", bookingData);
         setBookings(bookingData);
         setFilteredBookings(bookingData);
 
-        // Log the fetched technicians to debug
-        console.log("Technicians fetched (frontend):", technicianResponse.data);
+        // Handle technicians data
         const technicianData = technicianResponse.data.data || technicianResponse.data;
-        // Create a map of technician IDs to names
+        console.log("Technicians fetched (frontend):", technicianData);
         const techMap = technicianData.reduce((acc, tech) => {
           acc[tech._id] = `${tech.firstName} ${tech.lastName}`;
           return acc;
@@ -47,7 +59,14 @@ const RepairTrackingPage = () => {
         setTechnicians(techMap);
       } catch (err) {
         console.error("Error fetching data:", err);
-        setError("Failed to fetch data. Please try again.");
+        const errorMessage = err.response?.data?.message || err.message;
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setError("Session expired. Please log in again.");
+          localStorage.removeItem("token");
+          setTimeout(() => window.location.href = "/login", 2000);
+        } else {
+          setError(`Failed to fetch data: ${errorMessage}. Please try again.`);
+        }
       } finally {
         setLoading(false);
       }
@@ -103,9 +122,8 @@ const RepairTrackingPage = () => {
   };
 
   const getTechnicianName = (booking) => {
-    console.log("Booking technicianAssigned:", booking.technicianAssigned); // Add debugging
-    // If technicianAssigned is populated with firstName and lastName
-    if (booking.technicianAssigned && typeof booking.technicianAssigned === 'object') {
+    console.log("Booking technicianAssigned:", booking.technicianAssigned); // Debug log
+    if (booking.technicianAssigned && typeof booking.technicianAssigned === "object") {
       if (booking.technicianAssigned.firstName) {
         return `${booking.technicianAssigned.firstName} ${booking.technicianAssigned.lastName}`;
       }
@@ -113,8 +131,7 @@ const RepairTrackingPage = () => {
         return booking.technicianAssigned.name;
       }
     }
-    // If technicianAssigned is just an ID, use the technicians map
-    if (booking.technicianAssigned && typeof booking.technicianAssigned === 'string') {
+    if (booking.technicianAssigned && typeof booking.technicianAssigned === "string") {
       return technicians[booking.technicianAssigned] || "Not assigned yet";
     }
     return "Not assigned yet";
@@ -276,14 +293,18 @@ const RepairTrackingPage = () => {
               </button>
             </div>
             {error && (
-              <div className="mt-3 p-3 bg-red-50 text-red-700 border border-red-200 rounded-md">
-                {error}
+              <div className="mt-3 p-3 bg-red-50 text-red-700 border border-red-200 rounded-md flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{error}</span>
               </div>
             )}
           </div>
           {loading && (
             <div className="text-center mt-6">
-              <p>Loading bookings...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading bookings...</p>
             </div>
           )}
           {!loading && filteredBookings.length === 0 && (
@@ -302,66 +323,67 @@ const RepairTrackingPage = () => {
             filteredBookings.map((booking) => (
               <div
                 key={booking._id}
-                className="mt-6 bg-white p-4 shadow-md rounded-lg"
+                className="mt-6 bg-white p-6 shadow-md rounded-lg"
               >
                 <div>
-                  <h2 className="text-lg font-semibold mb-3">Repair Details</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h2 className="text-lg font-semibold mb-4 text-gray-800">Repair Details</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-sm text-gray-500">Order Number</p>
-                      <p className="font-medium">
+                      <p className="text-gray-500">Order Number</p>
+                      <p className="font-medium text-gray-900">
                         {booking.orderNumber || booking.bookingReference || `REP-${booking._id?.substring(0, 8) || "N/A"}`}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Customer Name</p>
-                      <p className="font-medium">{booking.name || "N/A"}</p>
+                      <p className="text-gray-500">Customer Name</p>
+                      <p className="font-medium text-gray-900">{booking.name || "N/A"}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Appliance</p>
-                      <p className="font-medium capitalize">
+                      <p className="text-gray-500">Appliance</p>
+                      <p className="font-medium text-gray-900 capitalize">
                         {booking.serviceType === "refrigerator"
                           ? "Samsung Refrigerator"
                           : (booking.serviceType || "N/A").replace(/-/g, " ")}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Scheduled Date</p>
-                      <p className="font-medium">
+                      <p className="text-gray-500">Scheduled Date</p>
+                      <p className="font-medium text-gray-900">
                         {booking.preferredDate
-                          ? new Date(booking.preferredDate)
-                              .toISOString()
-                              .split("T")[0]
+                          ? new Date(booking.preferredDate).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
                           : "N/A"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">
-                        Estimated Completion
-                      </p>
-                      <p className="font-medium">
+                      <p className="text-gray-500">Estimated Completion</p>
+                      <p className="font-medium text-gray-900">
                         {booking.estimatedCompletion
-                          ? new Date(booking.estimatedCompletion)
-                              .toISOString()
-                              .split("T")[0]
+                          ? new Date(booking.estimatedCompletion).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
                           : booking.preferredDate
-                          ? new Date(
-                              new Date(booking.preferredDate).getTime() +
-                                86400000
-                            )
-                              .toISOString()
-                              .split("T")[0]
+                          ? new Date(new Date(booking.preferredDate).getTime() + 86400000).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
                           : "N/A"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Technician</p>
-                      <p className="font-medium">{getTechnicianName(booking)}</p>
+                      <p className="text-gray-500">Technician</p>
+                      <p className="font-medium text-gray-900">{getTechnicianName(booking)}</p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-6">
-                  <h2 className="text-lg font-semibold mb-4">Repair Status</h2>
+                  <h2 className="text-lg font-semibold mb-4 text-gray-800">Repair Status</h2>
                   <div className="space-y-6">
                     <div className="flex items-center">
                       <div
@@ -371,25 +393,13 @@ const RepairTrackingPage = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="font-medium">Request Received</h3>
-                        <p className="text-sm text-gray-600">
-                          Your repair request has been received and is being processed
-                        </p>
+                        <h3 className="font-medium text-gray-900">Request Received</h3>
+                        <p className="text-sm text-gray-600">Your repair request has been received and is being processed</p>
                       </div>
                     </div>
                     <div className="flex items-center">
@@ -400,25 +410,13 @@ const RepairTrackingPage = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                          />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="font-medium">Diagnosis Complete</h3>
-                        <p className="text-sm text-gray-600">
-                          Our technician has diagnosed the issue
-                        </p>
+                        <h3 className="font-medium text-gray-900">Diagnosis Complete</h3>
+                        <p className="text-sm text-gray-600">Our technician has diagnosed the issue</p>
                       </div>
                     </div>
                     <div className="flex items-center">
@@ -429,25 +427,13 @@ const RepairTrackingPage = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-                          />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="font-medium">Repair in Progress</h3>
-                        <p className="text-sm text-gray-600">
-                          Repairs are currently being performed
-                        </p>
+                        <h3 className="font-medium text-gray-900">Repair in Progress</h3>
+                        <p className="text-sm text-gray-600">Repairs are currently being performed</p>
                       </div>
                     </div>
                     <div className="flex items-center">
@@ -458,25 +444,13 @@ const RepairTrackingPage = () => {
                             : "bg-gray-200 text-gray-500"
                         }`}
                       >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="font-medium">Repair Completed</h3>
-                        <p className="text-sm text-gray-600">
-                          Your appliance has been repaired and tested
-                        </p>
+                        <h3 className="font-medium text-gray-900">Repair Completed</h3>
+                        <p className="text-sm text-gray-600">Your appliance has been repaired and tested</p>
                       </div>
                     </div>
                   </div>

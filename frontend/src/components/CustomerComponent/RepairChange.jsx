@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Header from '../Header';
 import Footer from '../Footer';
 
+// Toast, ConfirmDialog, and EditBookingModal components remain unchanged
 const Toast = ({ message, type, onClose }) => {
   return (
     <div 
@@ -30,7 +31,6 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-// Confirmation Dialog Component
 const ConfirmDialog = ({ isOpen, message, onConfirm, onCancel }) => {
   if (!isOpen) return null;
   
@@ -73,7 +73,6 @@ const ConfirmDialog = ({ isOpen, message, onConfirm, onCancel }) => {
   );
 };
 
-// Enhanced Modal Component for Editing Booking
 const EditBookingModal = ({ booking, isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState(booking || { name: "", serviceType: "", preferredDate: "" });
   const [dateError, setDateError] = useState(null);
@@ -212,7 +211,6 @@ const RepairChanges = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
@@ -222,88 +220,130 @@ const RepairChanges = () => {
   // Auto-hide toast after 4 seconds
   useEffect(() => {
     if (toast.show) {
-      const timer = setTimeout(() => {
-        setToast({ ...toast, show: false });
-      }, 4000);
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 4000);
       return () => clearTimeout(timer);
     }
   }, [toast]);
 
-  // Fetch bookings from API
-  useEffect(() => {
-    fetch("http://localhost:5000/api/bookings")
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch bookings");
-        }
-        return res.json();
-      })
-      .then((response) => {
-        const bookingsData = response.data || response;
-        const validBookings = bookingsData.filter((booking) => booking && booking._id);
-        const idSet = new Set(validBookings.map((booking) => booking._id));
-        
-        if (idSet.size !== validBookings.length) {
-          const uniqueBookings = [];
-          const seenIds = new Set();
-          for (const booking of validBookings) {
-            if (!seenIds.has(booking._id)) {
-              seenIds.add(booking._id);
-              uniqueBookings.push(booking);
-            }
-          }
-          setBookings(uniqueBookings);
-        } else {
-          setBookings(validBookings);
-        }
-        
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching bookings:", err);
-        setError("Failed to load bookings. Please try again later.");
-        setLoading(false);
+  // Fetch bookings with authentication
+  const fetchBookings = async () => {
+    setLoading(true);
+    setError(null);
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setError("Please log in to view bookings.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/bookings", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
       });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Session expired. Please log in again.");
+        }
+        throw new Error("Failed to fetch bookings");
+      }
+
+      const data = await response.json();
+      const bookingsData = data.data || data;
+      const validBookings = bookingsData.filter((booking) => booking && booking._id);
+
+      // Remove duplicates
+      const uniqueBookings = Array.from(
+        new Map(validBookings.map((b) => [b._id, b])).values()
+      );
+
+      setBookings(uniqueBookings);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching bookings:", err);
+      setError(err.message || "Failed to load bookings. Please try again later.");
+      setLoading(false);
+      if (err.message.includes("Session expired")) {
+        localStorage.removeItem('token');
+        setTimeout(() => window.location.href = '/login', 2000);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
   }, []);
 
-  // Handle delete booking
-  const handleDelete = (id) => {
-    fetch(`http://localhost:5000/api/bookings/${id}`, {
-      method: "DELETE",
-    })
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then((errData) => {
-            throw new Error(`Failed to delete booking: ${errData.message || res.statusText}`);
-          });
-        }
-        return res.json();
-      })
-      .then(() => {
-        setBookings(bookings.filter((booking) => booking._id !== id));
-        setError(null);
-        setToast({
-          show: true,
-          message: "Booking deleted successfully!",
-          type: "success",
-        });
-        setConfirmDialog({ show: false, id: null, message: "" });
-      })
-      .catch((err) => {
-        console.error("Error deleting booking:", err);
-        setError(err.message || "Failed to delete booking. Please try again.");
+  // Handle delete booking with authentication
+  const handleDelete = async (id) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError("Please log in to delete bookings.");
+      return;
+    }
+
+    const booking = bookings.find((b) => b._id === id);
+    if (booking && booking.status.toLowerCase() === "completed") {
+      setToast({
+        show: true,
+        message: "Completed bookings cannot be deleted.",
+        type: "error",
       });
+      setConfirmDialog({ show: false, id: null, message: "" });
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/bookings/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Session expired. Please log in again.");
+        }
+        throw new Error(`Failed to delete booking: ${errData.message || response.statusText}`);
+      }
+
+      setBookings(bookings.filter((booking) => booking._id !== id));
+      setToast({
+        show: true,
+        message: "Booking deleted successfully!",
+        type: "success",
+      });
+      setConfirmDialog({ show: false, id: null, message: "" });
+    } catch (err) {
+      console.error("Error deleting booking:", err);
+      setError(err.message || "Failed to delete booking. Please try again.");
+      if (err.message.includes("Session expired")) {
+        localStorage.removeItem('token');
+        setTimeout(() => window.location.href = '/login', 2000);
+      }
+    }
   };
 
   // Handle edit button click to open modal
   const handleEditClick = (booking) => {
     if (!booking || !booking._id) {
       console.error("Invalid booking data:", booking);
+      setToast({
+        show: true,
+        message: "Invalid booking data.",
+        type: "error",
+      });
       return;
     }
-    console.log("Edit clicked for booking:", booking); // Debug log
-    if (booking.status === "Completed") {
-      console.log("Blocked edit for Completed booking:", booking._id);
+    if (booking.status.toLowerCase() === "completed") {
       setToast({
         show: true,
         message: "Completed bookings cannot be edited.",
@@ -315,23 +355,30 @@ const RepairChanges = () => {
     setIsModalOpen(true);
   };
 
-  // Handle save edited booking
-  const handleEdit = (id, updatedData) => {
+  // Handle save edited booking with authentication
+  const handleEdit = async (id, updatedData) => {
     if (!id) {
       setError("Failed to update booking: Invalid ID");
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError("Please log in to update bookings.");
+      setIsModalOpen(false);
       return;
     }
 
     const originalBooking = bookings.find((b) => b._id === id);
     if (!originalBooking) {
       setError("Failed to update booking: Booking not found");
+      setIsModalOpen(false);
       return;
     }
-    if (originalBooking.status === "Completed") {
-      console.log("Blocked update for Completed booking:", id);
+    if (originalBooking.status.toLowerCase() === "completed") {
       setToast({
         show: true,
-        message: "Cannot update a completed booking.",
+        message: "Completed bookings cannot be edited.",
         type: "error",
       });
       setIsModalOpen(false);
@@ -340,49 +387,61 @@ const RepairChanges = () => {
     }
 
     const mergedData = { ...originalBooking, ...updatedData };
-    console.log("Sending update for booking:", mergedData); // Debug log
 
-    fetch(`http://localhost:5000/api/bookings/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(mergedData),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then((errData) => {
-            throw new Error(`Failed to update booking: ${errData.message || res.statusText}`);
-          });
-        }
-        return res.json();
-      })
-      .then((response) => {
-        const updatedBooking = response.data;
-        if (!updatedBooking) {
-          throw new Error("Updated booking data not found in response");
-        }
-        setBookings((prevBookings) =>
-          prevBookings.map((b) => (b._id === id ? updatedBooking : b))
-        );
-        setIsModalOpen(false);
-        setSelectedBooking(null);
-        setError(null);
-        setToast({
-          show: true,
-          message: "Booking updated successfully!",
-          type: "success",
-        });
-      })
-      .catch((err) => {
-        console.error("Error updating booking:", err);
-        setError(err.message || "Failed to update booking. Please try again.");
+    try {
+      const response = await fetch(`http://localhost:5000/api/bookings/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(mergedData),
       });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Session expired. Please log in again.");
+        }
+        throw new Error(`Failed to update booking: ${errData.message || response.statusText}`);
+      }
+
+      const updatedBooking = await response.json();
+      const newBookingData = updatedBooking.data || updatedBooking;
+      setBookings((prevBookings) =>
+        prevBookings.map((b) => (b._id === id ? newBookingData : b))
+      );
+      setIsModalOpen(false);
+      setSelectedBooking(null);
+      setToast({
+        show: true,
+        message: "Booking updated successfully!",
+        type: "success",
+      });
+    } catch (err) {
+      console.error("Error updating booking:", err);
+      setError(err.message || "Failed to update booking. Please try again.");
+      if (err.message.includes("Session expired")) {
+        localStorage.removeItem('token');
+        setTimeout(() => window.location.href = '/login', 2000);
+      }
+    }
   };
 
   // Show confirmation dialog before deleting
   const confirmDelete = (id) => {
-    const booking = bookings.find(b => b._id === id);
+    const booking = bookings.find((b) => b._id === id);
     if (!booking) return;
     
+    if (booking.status.toLowerCase() === "completed") {
+      setToast({
+        show: true,
+        message: "Completed bookings cannot be deleted.",
+        type: "error",
+      });
+      return;
+    }
+
     setConfirmDialog({
       show: true,
       id: id,
@@ -393,10 +452,10 @@ const RepairChanges = () => {
   // Filter bookings by status
   const filteredBookings = statusFilter === "all" 
     ? bookings 
-    : bookings.filter(booking => booking.status === statusFilter);
+    : bookings.filter((booking) => booking.status.toLowerCase() === statusFilter.toLowerCase());
 
   // Get unique statuses for filter dropdown
-  const statusOptions = ["all", ...new Set(bookings.map(b => b.status))].filter(Boolean);
+  const statusOptions = ["all", ...new Set(bookings.map((b) => b.status))].filter(Boolean);
 
   if (loading) return (
     <>
@@ -421,26 +480,7 @@ const RepairChanges = () => {
         </div>
         <p className="text-red-800 mb-4 font-medium">{error}</p>
         <button
-          onClick={() => {
-            setError(null);
-            setLoading(true);
-            fetch("http://localhost:5000/api/bookings")
-              .then((res) => {
-                if (!res.ok) throw new Error("Failed to fetch bookings");
-                return res.json();
-              })
-              .then((response) => {
-                const bookingsData = response.data || response;
-                const validBookings = bookingsData.filter((booking) => booking && booking._id);
-                setBookings(validBookings);
-                setLoading(false);
-              })
-              .catch((err) => {
-                console.error("Error fetching bookings:", err);
-                setError("Failed to load bookings. Please try again later.");
-                setLoading(false);
-              });
-          }}
+          onClick={fetchBookings}
           className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md transition-all duration-200"
         >
           Retry
@@ -453,12 +493,8 @@ const RepairChanges = () => {
   return (
     <>
       <Header />
-      {/* Main Content with Background Image */}
-      <div 
-        className="min-h-screen py-12 bg-cover bg-center bg-no-repeat"
-      >
+      <div className="min-h-screen py-12 bg-cover bg-center bg-no-repeat">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-          {/* Main Container with Semi-Transparent Background for Readability */}
           <div className="rounded-2xl shadow-xl overflow-hidden backdrop-blur-md bg-white/80 border border-white/30">
             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-6 sm:p-10 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-full opacity-10">
@@ -473,7 +509,6 @@ const RepairChanges = () => {
             </div>
 
             <div className="p-6">
-              {/* Filter Controls */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center space-x-2">
                   <label className="text-sm font-medium text-gray-700">Filter by status:</label>
@@ -482,14 +517,13 @@ const RepairChanges = () => {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="border border-gray-300 rounded-lg p-2 text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   >
-                    {statusOptions.map(status => (
+                    {statusOptions.map((status) => (
                       <option key={status} value={status}>
                         {status === "all" ? "All Statuses" : status}
                       </option>
                     ))}
                   </select>
                 </div>
-                
                 <div className="text-gray-500 text-sm">
                   Showing {filteredBookings.length} of {bookings.length} bookings
                 </div>
@@ -552,10 +586,10 @@ const RepairChanges = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                              booking.status === "Pending" ? "bg-yellow-100 text-yellow-800" :
-                              booking.status === "Confirmed" ? "bg-green-100 text-green-800" :
-                              booking.status === "Completed" ? "bg-blue-100 text-blue-800" :
-                              booking.status === "Cancelled" ? "bg-red-100 text-red-800" :
+                              booking.status.toLowerCase() === "pending" ? "bg-yellow-100 text-yellow-800" :
+                              booking.status.toLowerCase() === "confirmed" ? "bg-green-100 text-green-800" :
+                              booking.status.toLowerCase() === "completed" ? "bg-blue-100 text-blue-800" :
+                              booking.status.toLowerCase() === "cancelled" ? "bg-red-100 text-red-800" :
                               "bg-gray-100 text-gray-800"
                             }`}>
                               {booking.status}
@@ -563,23 +597,24 @@ const RepairChanges = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end space-x-2">
-                              <button
-                                onClick={() => handleEditClick(booking)}
-                                disabled={booking.status === "Completed"}
-                                className={`px-3 py-1 rounded-lg transition-colors duration-150 ${
-                                  booking.status === "Completed"
-                                    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-                                    : "text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100"
-                                }`}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => confirmDelete(booking._id)}
-                                className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors duration-150"
-                              >
-                                Delete
-                              </button>
+                              {booking.status.toLowerCase() === "completed" ? (
+                                <span className="text-gray-500 px-3 py-1">Completed</span>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleEditClick(booking)}
+                                    className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-lg transition-colors duration-150"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => confirmDelete(booking._id)}
+                                    className="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors duration-150"
+                                  >
+                                    Delete
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -594,7 +629,6 @@ const RepairChanges = () => {
       </div>
       <Footer />
 
-      {/* Edit Booking Modal */}
       <EditBookingModal
         booking={selectedBooking}
         isOpen={isModalOpen}
@@ -605,7 +639,6 @@ const RepairChanges = () => {
         onSave={(updatedData) => handleEdit(selectedBooking?._id, updatedData)}
       />
 
-      {/* Toast Notification */}
       {toast.show && (
         <Toast 
           message={toast.message} 
@@ -614,7 +647,6 @@ const RepairChanges = () => {
         />
       )}
 
-      {/* Confirmation Dialog */}
       <ConfirmDialog 
         isOpen={confirmDialog.show}
         message={confirmDialog.message}
