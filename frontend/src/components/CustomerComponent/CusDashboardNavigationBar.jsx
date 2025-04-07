@@ -1,16 +1,18 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom'; // Import React Router hooks
-import { FaUser, FaClipboardList, FaTools, FaHeadset, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaUser, FaClipboardList, FaTools, FaMapMarkerAlt, FaHeadset, FaCog, FaSignOutAlt } from 'react-icons/fa';
 import logo from '../../assets/logo.png';
 
 const CusDashboardNavigationBar = () => {
-  const location = useLocation(); // Get the current route
-  const navigate = useNavigate(); // For programmatic navigation (e.g., logout)
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Clear the token
-    navigate('/'); // Redirect to login page
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('customerId');
+    navigate('/'); // Kept as original
   };
 
   return (
@@ -29,6 +31,7 @@ const CusDashboardNavigationBar = () => {
           { icon: FaUser, text: 'Profile', path: '/customer-dashboard' },
           { icon: FaClipboardList, text: 'Edit Bookings', path: '/edit-booking' },
           { icon: FaTools, text: 'Repair history', path: '/repair-history' },
+          { icon: FaMapMarkerAlt, text: 'Track Repairs', path: '/tracking' },
           { icon: FaHeadset, text: 'Support', path: '/support' },
           { icon: FaCog, text: 'Settings', path: '/settings' },
         ].map((item, index) => (
