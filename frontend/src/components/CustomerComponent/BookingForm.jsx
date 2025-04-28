@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../Header';
-import Footer from '../footer';
+import Footer from '../Footer';
 import ovenRepairBg from '../../assets/bookingbackground.jpg';
 import axios from 'axios';
 
@@ -17,58 +17,105 @@ const BookingForm = () => {
     description: '',
   });
 
+  const [errors, setErrors] = useState({});
   const [submitStatus, setSubmitStatus] = useState(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Get current date for date input min
   const today = new Date().toISOString().split('T')[0];
+  const maxDate = new Date();
+  maxDate.setMonth(maxDate.getMonth() + 3);
 
-  // Validate email format
-  const isValidEmail = (email) => {
-    return /\S+@\S+\.\S+/.test(email);
-  };
+  // Validation functions
+  const validateForm = () => {
+    const newErrors = {};
 
-  // Validate phone number format
-  const isValidPhone = (phone) => {
-    return /^\d{10,15}$/.test(phone.replace(/[^\d]/g, ''));
+    if (!formData.name.trim()) {
+      newErrors.name = 'Full name is required';
+    } else if (formData.name.length < 2 || formData.name.length > 50) {
+      newErrors.name = 'Name must be between 2 and 50 characters';
+    } else if (!/^[a-zA-Z\s-]+$/.test(formData.name)) {
+      newErrors.name = 'Name can only contain letters, spaces, and hyphens';
+    }
+
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.phone) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\+?\d{0,15}$/.test(formData.phone)) {
+      newErrors.phone = 'Phone must be 10-15 digits and can only start with an optional "+" followed by numbers';
+    } else if (formData.phone.length < 10 || formData.phone.length > 15) {
+      newErrors.phone = 'Phone must be between 10 and 15 digits';
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (formData.address.length < 10 || formData.address.length > 200) {
+      newErrors.address = 'Address must be between 10 and 200 characters';
+    }
+
+    if (!formData.serviceType) {
+      newErrors.serviceType = 'Please select an appliance type';
+    }
+
+    if (!formData.preferredDate) {
+      newErrors.preferredDate = 'Please select a date';
+    } else {
+      const selectedDate = new Date(formData.preferredDate);
+      if (selectedDate < new Date().setHours(0, 0, 0, 0)) {
+        newErrors.preferredDate = 'Date cannot be in the past';
+      }
+      if (selectedDate > maxDate) {
+        newErrors.preferredDate = 'Date cannot be more than 3 months in future';
+      }
+    }
+
+    if (formData.preferredTime && !['morning', 'afternoon', 'evening'].includes(formData.preferredTime)) {
+      newErrors.preferredTime = 'Please select a valid time slot';
+    }
+
+    if (formData.description && formData.description.length > 1000) {
+      newErrors.description = 'Description cannot exceed 1000 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
+
+    if (name === 'phone') {
+      const cleanedValue = value.replace(/[^+\d]/g, '');
+      if (cleanedValue.startsWith('+')) {
+        const rest = cleanedValue.slice(1);
+        if (!/^\d*$/.test(rest)) return;
+      } else {
+        if (!/^\d*$/.test(cleanedValue)) return;
+      }
+      if (cleanedValue.length > 15) return;
+      setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
-    if (!formData.name || !formData.email || !formData.phone || !formData.address || !formData.serviceType || !formData.preferredDate) {
-      setSubmitStatus({ 
-        type: 'error', 
-        message: 'Please fill out all required fields to continue.' 
-      });
-      setTimeout(() => setSubmitStatus(null), 4000);
-      return;
-    }
 
-    if (!isValidEmail(formData.email)) {
-      setSubmitStatus({ 
-        type: 'error', 
-        message: 'Please enter a valid email address.' 
-      });
-      setTimeout(() => setSubmitStatus(null), 4000);
-      return;
-    }
-
-    if (!isValidPhone(formData.phone)) {
-      setSubmitStatus({ 
-        type: 'error', 
-        message: 'Please enter a valid phone number.' 
+    if (!validateForm()) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please fix the errors in the form before submitting',
       });
       setTimeout(() => setSubmitStatus(null), 4000);
       return;
@@ -77,13 +124,24 @@ const BookingForm = () => {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem('token'); // Get token from localStorage
+      if (!token) {
+        setSubmitStatus({
+          type: 'error',
+          message: 'Please log in to book a service',
+        });
+        setTimeout(() => navigate('/login'), 2000); // Redirect to login after 2 seconds
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.post('http://localhost:5000/api/bookings', formData, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Add token to headers
         },
       });
-      
-      console.log('Server response:', response.data);
+
       setFormData({
         name: '',
         email: '',
@@ -94,15 +152,24 @@ const BookingForm = () => {
         preferredTime: '',
         description: '',
       });
+      setErrors({});
       setShowSuccessPopup(true);
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Something went wrong';
-      console.error('Axios error:', error.response ? error.response.data : error.message);
-      setSubmitStatus({ 
-        type: 'error', 
-        message: `Sorry, we couldn't process your booking: ${errorMessage}. Please try again.` 
-      });
-      setTimeout(() => setSubmitStatus(null), 4000);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        setSubmitStatus({
+          type: 'error',
+          message: 'Session expired. Please log in again.',
+        });
+        localStorage.removeItem('token');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setSubmitStatus({
+          type: 'error',
+          message: `Booking failed: ${errorMessage}`,
+        });
+        setTimeout(() => setSubmitStatus(null), 4000);
+      }
     } finally {
       setLoading(false);
     }
@@ -113,10 +180,19 @@ const BookingForm = () => {
     navigate('/customer-dashboard');
   };
 
-  // Scroll to top on component mount
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+
+    // Check if user is logged in; if not, redirect to login
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please log in to book a service',
+      });
+      setTimeout(() => navigate('/login'), 2000);
+    }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-cover bg-center bg-fixed bg-no-repeat flex flex-col"
@@ -165,10 +241,10 @@ const BookingForm = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 ${errors.name ? 'border-red-500' : ''}`}
                     placeholder="Eranga-harsha"
                   />
+                  {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                 </div>
 
                 <div>
@@ -181,10 +257,10 @@ const BookingForm = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 ${errors.email ? 'border-red-500' : ''}`}
                     placeholder="Eranga@gmail.com"
                   />
+                  {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
                 </div>
               </div>
 
@@ -199,10 +275,10 @@ const BookingForm = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 ${errors.phone ? 'border-red-500' : ''}`}
                     placeholder="(+94) 123-4567"
                   />
+                  {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
                 </div>
 
                 <div>
@@ -215,10 +291,10 @@ const BookingForm = () => {
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 ${errors.address ? 'border-red-500' : ''}`}
                     placeholder="colombo, Sri Lanka"
                   />
+                  {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address}</p>}
                 </div>
               </div>
 
@@ -231,8 +307,7 @@ const BookingForm = () => {
                   name="serviceType"
                   value={formData.serviceType}
                   onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 ${errors.serviceType ? 'border-red-500' : ''}`}
                 >
                   <option value="">Select an appliance</option>
                   <option value="refrigerator">Refrigerator</option>
@@ -246,6 +321,7 @@ const BookingForm = () => {
                   <option value="water-heater">Water Heater</option>
                   <option value="vacuum-cleaner">Vacuum Cleaner</option>
                 </select>
+                {errors.serviceType && <p className="mt-1 text-sm text-red-500">{errors.serviceType}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -260,9 +336,9 @@ const BookingForm = () => {
                     value={formData.preferredDate}
                     onChange={handleChange}
                     min={today}
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 ${errors.preferredDate ? 'border-red-500' : ''}`}
                   />
+                  {errors.preferredDate && <p className="mt-1 text-sm text-red-500">{errors.preferredDate}</p>}
                 </div>
 
                 <div>
@@ -274,13 +350,14 @@ const BookingForm = () => {
                     name="preferredTime"
                     value={formData.preferredTime}
                     onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 ${errors.preferredTime ? 'border-red-500' : ''}`}
                   >
                     <option value="">Select a time slot</option>
                     <option value="morning">Morning (8AM - 12PM)</option>
                     <option value="afternoon">Afternoon (12PM - 4PM)</option>
                     <option value="evening">Evening (4PM - 7PM)</option>
                   </select>
+                  {errors.preferredTime && <p className="mt-1 text-sm text-red-500">{errors.preferredTime}</p>}
                 </div>
               </div>
 
@@ -294,9 +371,10 @@ const BookingForm = () => {
                   value={formData.description}
                   onChange={handleChange}
                   rows="4"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 ${errors.description ? 'border-red-500' : ''}`}
                   placeholder="Please describe the issue you're experiencing with your appliance..."
                 />
+                {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
               </div>
 
               <div className="pt-3">
@@ -329,7 +407,6 @@ const BookingForm = () => {
         </div>
       </div>
 
-      {/* Success Popup Modal */}
       {showSuccessPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full shadow-xl transform transition-all">
