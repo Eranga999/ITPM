@@ -32,7 +32,6 @@ mongoose
     console.error('MongoDB Connection Failed:', err.message);
     process.exit(1);
   });
-app.use('/api/service-center', serviceCenterRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api/admin', adminRoutes);

@@ -13,33 +13,26 @@ import {
   Calendar,
   MapPin,
   User,
-  PenTool,
+  PenTool, // Changed from Tool to PenTool
   MessageSquare,
   Trash2,
   PlayCircle,
-  Building2,
-  Users,
+  Building2
 } from 'lucide-react';
 
 const PendingJobs = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
-  const [technicians, setTechnicians] = useState([]);
-  const [selectedTechnicianId, setSelectedTechnicianId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTransportModalOpen, setIsTransportModalOpen] = useState(false);
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [currentJobId, setCurrentJobId] = useState(null);
   const [serviceCenters, setServiceCenters] = useState([]);
   const [transportFormData, setTransportFormData] = useState({
     serviceCenter: '',
     notes: '',
-  });
-  const [assignFormData, setAssignFormData] = useState({
-    technicianId: '',
   });
   const [formData, setFormData] = useState({
     customerName: '',
@@ -53,26 +46,13 @@ const PendingJobs = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('date');
 
-  const fetchTechnicians = async () => {
-    try {
-      console.log('Fetching technicians');
-      const response = await axios.get('http://localhost:5000/api/admin/technicians');
-      setTechnicians(response.data.data);
-      if (response.data.data.length > 0) {
-        setSelectedTechnicianId(response.data.data[0]._id);
-      }
-    } catch (err) {
-      console.error('Fetch technicians error:', err.response ? err.response.data : err.message);
-      setError('Failed to load technicians: ' + (err.response?.data?.message || err.message));
-    }
-  };
+  const technicianId = '670f5a1b2c8d4e9f1a2b3c4d'; // Replace with your actual technician ID
 
   const fetchPendingJobs = async () => {
-    if (!selectedTechnicianId) return;
     try {
-      console.log('Fetching pending and in-progress jobs for technician:', selectedTechnicianId);
+      console.log('Fetching pending and in-progress jobs');
       const response = await axios.get('http://localhost:5000/api/technician/jobs', {
-        params: { technicianId: selectedTechnicianId, status: { $in: ['Pending', 'In Progress'] } },
+        params: { technicianId, status: { $in: ['Pending', 'In Progress'] } },
       });
       setJobs(response.data.data);
       setLoading(false);
@@ -86,7 +66,7 @@ const PendingJobs = () => {
   const fetchServiceCenters = async () => {
     try {
       console.log('Fetching service centers');
-      const response = await axios.get('http://localhost:5000/api/service-centers');
+      const response = await axios.get('http://localhost:5000/api/admin/service-centers');
       setServiceCenters(response.data.data);
     } catch (err) {
       console.error('Fetch service centers error:', err.response ? err.response.data : err.message);
@@ -124,19 +104,6 @@ const PendingJobs = () => {
     });
   };
 
-  const handleOpenAssignModal = (jobId) => {
-    setCurrentJobId(jobId);
-    setIsAssignModalOpen(true);
-  };
-
-  const handleCloseAssignModal = () => {
-    setIsAssignModalOpen(false);
-    setCurrentJobId(null);
-    setAssignFormData({
-      technicianId: '',
-    });
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -153,14 +120,6 @@ const PendingJobs = () => {
     }));
   };
 
-  const handleAssignInputChange = (e) => {
-    const { name, value } = e.target;
-    setAssignFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
   const handleAddJob = async (e) => {
     e.preventDefault();
     try {
@@ -168,31 +127,15 @@ const PendingJobs = () => {
       const jobData = {
         ...formData,
         date: new Date(formData.date).toISOString(),
-        technician: selectedTechnicianId,
+        technician: technicianId,
       };
       const response = await axios.post('http://localhost:5000/api/technician/jobs', jobData);
       console.log('Add Job Response:', response.data);
       handleCloseModal();
-      fetchPendingJobs();
+      fetchPendingJobs(); // Refresh the list
     } catch (err) {
       console.error('Add job error:', err.response ? err.response.data : err.message);
       setError('Failed to add job: ' + (err.response?.data?.message || err.message));
-    }
-  };
-
-  const handleAssignJob = async (e) => {
-    e.preventDefault();
-    try {
-      console.log('Assigning job:', currentJobId, 'to technician:', assignFormData.technicianId);
-      const response = await axios.post(`http://localhost:5000/api/technician/jobs/${currentJobId}/assign`, {
-        technicianId: assignFormData.technicianId,
-      });
-      console.log('Assign Job Response:', response.data);
-      handleCloseAssignModal();
-      fetchPendingJobs();
-    } catch (err) {
-      console.error('Assign job error:', err.response ? err.response.data : err.message);
-      setError('Failed to assign job: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -203,7 +146,7 @@ const PendingJobs = () => {
         status: 'In Progress',
       });
       console.log('Start Job Response:', response.data);
-      fetchPendingJobs();
+      fetchPendingJobs(); // Refresh the list
       handleOpenTransportModal(id);
     } catch (err) {
       console.error('Start job error:', err.response ? err.response.data : err.message);
@@ -217,7 +160,7 @@ const PendingJobs = () => {
       console.log('Submitting transport request:', transportFormData);
       const transportData = {
         job: currentJobId,
-        technician: selectedTechnicianId,
+        technician: technicianId,
         serviceCenter: transportFormData.serviceCenter,
         notes: transportFormData.notes,
       };
@@ -237,7 +180,7 @@ const PendingJobs = () => {
         status: 'Completed',
       });
       console.log('Complete Job Response:', response.data);
-      fetchPendingJobs();
+      fetchPendingJobs(); // Refresh the list
     } catch (err) {
       console.error('Complete job error:', err.response ? err.response.data : err.message);
       setError('Failed to complete job: ' + (err.response?.data?.message || err.message));
@@ -250,7 +193,7 @@ const PendingJobs = () => {
         console.log('Deleting job:', id);
         const response = await axios.delete(`http://localhost:5000/api/technician/jobs/${id}`);
         console.log('Delete Job Response:', response.data);
-        fetchPendingJobs();
+        fetchPendingJobs(); // Refresh the list
       } catch (err) {
         console.error('Delete error:', err.response ? err.response.data : err.message);
         setError('Failed to delete job: ' + (err.response?.data?.message || err.message));
@@ -259,17 +202,13 @@ const PendingJobs = () => {
   };
 
   useEffect(() => {
-    fetchTechnicians();
+    fetchPendingJobs();
     fetchServiceCenters();
   }, []);
 
-  useEffect(() => {
-    fetchPendingJobs();
-  }, [selectedTechnicianId]);
-
   const getStatusColor = (status) => {
     const colors = {
-      Pending: 'bg-amber-100 text-amber-800 border-amber-200',
+      'Pending': 'bg-amber-100 text-amber-800 border-amber-200',
       'In Progress': 'bg-blue-100 text-blue-800 border-blue-200',
     };
     return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
@@ -277,19 +216,18 @@ const PendingJobs = () => {
 
   const getStatusIcon = (status) => {
     const icons = {
-      Pending: <Clock className="w-4 h-4" />,
+      'Pending': <Clock className="w-4 h-4" />,
       'In Progress': <PlayCircle className="w-4 h-4" />,
     };
     return icons[status] || <Package className="w-4 h-4" />;
   };
 
   const filteredJobs = jobs
-    .filter(
-      (job) =>
-        (statusFilter === 'All' || job.status === statusFilter) &&
-        ((job.appliance || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (job.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (job.issue || '').toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter(job => 
+      (statusFilter === 'All' || job.status === statusFilter) &&
+      ((job.appliance || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (job.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (job.issue || '').toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .sort((a, b) => {
       if (sortBy === 'date') {
@@ -313,37 +251,20 @@ const PendingJobs = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="bg-blue-600 p-2 rounded-lg">
-                  <PenTool className="h-6 w-6 text-white" />
+                  <PenTool className="h-6 w-6 text-white" /> {/* Changed from Tool */}
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Pending Jobs</h1>
                   <p className="text-sm text-gray-500">Manage your pending and in-progress jobs</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <select
-                    value={selectedTechnicianId}
-                    onChange={(e) => setSelectedTechnicianId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select Technician</option>
-                    {technicians.map((technician) => (
-                      <option key={technician._id} value={technician._id}>
-                        {technician.firstName} {technician.lastName}
-                      </option>
-                    ))}
-                  </select>
-                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                </div>
-                <button
-                  onClick={handleOpenModal}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  New Job
-                </button>
-              </div>
+              <button
+                onClick={handleOpenModal}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                New Job
+              </button>
             </div>
           </div>
         </header>
@@ -387,26 +308,19 @@ const PendingJobs = () => {
               <p className="text-gray-600">No pending or in-progress jobs available.</p>
             ) : (
               filteredJobs.map((job) => (
-                <div
-                  key={job._id}
-                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden border border-gray-100"
-                >
+                <div key={job._id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden border border-gray-100">
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-start space-x-3">
                         <div className="mt-1">
-                          <PenTool className="w-5 h-5 text-gray-400" />
+                          <PenTool className="w-5 h-5 text-gray-400" /> {/* Changed from Tool */}
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{job.appliance}</h3>
                           <p className="text-sm text-gray-500">Job ID: {job._id}</p>
                         </div>
                       </div>
-                      <div
-                        className={`px-3 py-1 rounded-full border flex items-center gap-1.5 ${getStatusColor(
-                          job.status
-                        )}`}
-                      >
+                      <div className={`px-3 py-1 rounded-full border flex items-center gap-1.5 ${getStatusColor(job.status)}`}>
                         {getStatusIcon(job.status)}
                         <span className="text-sm font-medium">{job.status}</span>
                       </div>
@@ -438,26 +352,11 @@ const PendingJobs = () => {
                       <div className="flex items-center gap-3 text-sm">
                         <Clock className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600">Urgency:</span>
-                        <span
-                          className={`font-medium ${
-                            job.urgency === 'High'
-                              ? 'text-red-700'
-                              : job.urgency === 'Medium'
-                              ? 'text-yellow-700'
-                              : 'text-green-700'
-                          }`}
-                        >
-                          {job.urgency}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Users className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600">Technician:</span>
-                        <span className="font-medium text-gray-900">
-                          {job.technician
-                            ? `${job.technician.firstName} ${job.technician.lastName}`
-                            : 'Unassigned'}
-                        </span>
+                        <span className={`font-medium ${
+                          job.urgency === 'High' ? 'text-red-700' :
+                          job.urgency === 'Medium' ? 'text-yellow-700' :
+                          'text-green-700'
+                        }`}>{job.urgency}</span>
                       </div>
                     </div>
 
@@ -471,15 +370,6 @@ const PendingJobs = () => {
                     )}
 
                     <div className="mt-6 flex gap-3">
-                      {!job.technician && (
-                        <button
-                          onClick={() => handleOpenAssignModal(job._id)}
-                          className="flex-1 bg-purple-50 text-purple-600 px-4 py-2 rounded-lg hover:bg-purple-100 transition-colors duration-200 font-medium text-sm flex items-center justify-center gap-2"
-                        >
-                          <Users className="w-4 h-4" />
-                          Assign Technician
-                        </button>
-                      )}
                       {job.status === 'Pending' ? (
                         <button
                           onClick={() => handleStartJob(job._id)}
@@ -653,7 +543,7 @@ const PendingJobs = () => {
                   <option value="">Select a service center</option>
                   {serviceCenters.map((center) => (
                     <option key={center._id} value={center._id}>
-                      {center.name} - {center.location || center.address}
+                      {center.name} - {center.location}
                     </option>
                   ))}
                 </select>
@@ -685,52 +575,6 @@ const PendingJobs = () => {
                   className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
                 >
                   Request Transport
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Assign Technician Modal */}
-      {isAssignModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Assign Technician</h2>
-            <form onSubmit={handleAssignJob}>
-              <div className="mb-4">
-                <label htmlFor="technicianId" className="block text-gray-700 mb-1">
-                  Select Technician
-                </label>
-                <select
-                  id="technicianId"
-                  name="technicianId"
-                  value={assignFormData.technicianId}
-                  onChange={handleAssignInputChange}
-                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select a technician</option>
-                  {technicians.map((technician) => (
-                    <option key={technician._id} value={technician._id}>
-                      {technician.firstName} {technician.lastName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={handleCloseAssignModal}
-                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-                >
-                  Assign
                 </button>
               </div>
             </form>

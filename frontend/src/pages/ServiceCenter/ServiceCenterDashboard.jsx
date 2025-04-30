@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
 const ServiceCenterDashboard = () => {
   const { id } = useParams();
   const [bookings, setBookings] = useState([]);
   const [serviceCenters, setServiceCenters] = useState([]);
-  const [technicians, setTechnicians] = useState([]);
   const [selectedCenterId, setSelectedCenterId] = useState('');
-  const [selectedTechnicianId, setSelectedTechnicianId] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchServiceCenters = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/service-centers');
+        const response = await axios.get('http://localhost:5000/api/admin/service-centers');
         const centers = response.data.data;
         setServiceCenters(centers);
         if (centers.length > 0 && !id) {
@@ -27,18 +25,7 @@ const ServiceCenterDashboard = () => {
         setLoading(false);
       }
     };
-
-    const fetchTechnicians = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/admin/technicians');
-        setTechnicians(response.data.data);
-      } catch (err) {
-        setError('Failed to load technicians');
-      }
-    };
-
     fetchServiceCenters();
-    fetchTechnicians();
   }, [id]);
 
   useEffect(() => {
@@ -48,6 +35,7 @@ const ServiceCenterDashboard = () => {
       try {
         setLoading(true);
         const response = await axios.get(`http://localhost:5000/api/service-centers/${serviceCenterId}/bookings`);
+        console.log('Bookings response:', response.data.data); // Debug
         setBookings(response.data.data);
         setLoading(false);
       } catch (err) {
@@ -57,32 +45,6 @@ const ServiceCenterDashboard = () => {
     };
     fetchBookings();
   }, [id, selectedCenterId]);
-
-  const handleAssignTechnician = async (bookingId) => {
-    const technicianId = selectedTechnicianId[bookingId];
-    if (!technicianId) {
-      alert('Please select a technician');
-      return;
-    }
-    try {
-      await axios.post(`http://localhost:5000/api/service-centers/bookings/${bookingId}/assign`, {
-        technicianId,
-      });
-      alert('Technician assigned successfully');
-      const serviceCenterId = id || selectedCenterId;
-      const response = await axios.get(`http://localhost:5000/api/service-centers/${serviceCenterId}/bookings`);
-      setBookings(response.data.data);
-    } catch (err) {
-      setError('Failed to assign technician');
-    }
-  };
-
-  const handleTechnicianChange = (bookingId, technicianId) => {
-    setSelectedTechnicianId((prev) => ({
-      ...prev,
-      [bookingId]: technicianId,
-    }));
-  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -115,54 +77,26 @@ const ServiceCenterDashboard = () => {
               <th className="py-3 px-6 text-left">Issue</th>
               <th className="py-3 px-6 text-left">Status</th>
               <th className="py-3 px-6 text-left">Assigned Date</th>
-              <th className="py-3 px-6 text-left">Technician</th>
-              <th className="py-3 px-6 text-left">Action</th>
             </tr>
           </thead>
           <tbody>
-            {bookings.map((booking) => (
-              <tr key={booking._id} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="py-4 px-6">
-                  {booking.bookingId ? booking.bookingId.name : 'Unknown Customer'}
-                </td>
-                <td className="py-4 px-6">
-                  {booking.bookingId ? booking.bookingId.serviceType : '-'}
-                </td>
-                <td className="py-4 px-6">
-                  {booking.bookingId && booking.bookingId.description ? booking.bookingId.description : '-'}
-                </td>
-                <td className="py-4 px-6">{booking.status}</td>
-                <td className="py-4 px-6">{new Date(booking.assignedDate).toLocaleDateString()}</td>
-                <td className="py-4 px-6">
-                  {booking.technicianId ? (
-                    `${booking.technicianId.firstName} ${booking.technicianId.lastName}`
-                  ) : (
-                    <select
-                      value={selectedTechnicianId[booking._id] || ''}
-                      onChange={(e) => handleTechnicianChange(booking._id, e.target.value)}
-                      className="border border-gray-300 rounded-md px-2 py-1"
-                    >
-                      <option value="">Select Technician</option>
-                      {technicians.map((technician) => (
-                        <option key={technician._id} value={technician._id}>
-                          {technician.firstName} {technician.lastName}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </td>
-                <td className="py-4 px-6">
-                  {!booking.technicianId && (
-                    <button
-                      onClick={() => handleAssignTechnician(booking._id)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                    >
-                      Assign
-                    </button>
-                  )}
+            {bookings.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="py-4 px-6 text-center">
+                  No bookings available
                 </td>
               </tr>
-            ))}
+            ) : (
+              bookings.map((booking) => (
+                <tr key={booking._id} className="border-b border-gray-200 hover:bg-gray-50">
+                  <td className="py-4 px-6">{booking.bookingId?.name || 'N/A'}</td>
+                  <td className="py-4 px-6">{booking.bookingId?.serviceType || 'N/A'}</td>
+                  <td className="py-4 px-6">{booking.bookingId?.description || '-'}</td>
+                  <td className="py-4 px-6">{booking.status}</td>
+                  <td className="py-4 px-6">{new Date(booking.assignedDate).toLocaleDateString()}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

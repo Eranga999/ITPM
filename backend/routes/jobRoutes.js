@@ -18,7 +18,4 @@ router.put('/jobs/:id', jobController.updateJob);
 // Delete a job
 router.delete('/jobs/:id', jobController.deleteJob);
 
-// Assign a job to a technician
-router.post('/jobs/:id/assign', jobController.assignJobToTechnician);
-
 export default router;
