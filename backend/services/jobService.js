@@ -18,7 +18,6 @@ class JobService {
   async getJobsByTechnician(technicianId, status = null) {
     try {
       console.log('Fetching jobs for technician:', technicianId);
-      // Validate technicianId
       if (!mongoose.Types.ObjectId.isValid(technicianId)) {
         throw new Error('Invalid technician ID');
       }
@@ -36,7 +35,6 @@ class JobService {
   async getJobStats(technicianId) {
     try {
       console.log('Fetching job stats for technician:', technicianId);
-      // Validate technicianId
       if (!mongoose.Types.ObjectId.isValid(technicianId)) {
         throw new Error('Invalid technician ID');
       }
@@ -102,6 +100,26 @@ class JobService {
       return deletedJob;
     } catch (error) {
       console.error('Error deleting job:', error.message, error.stack);
+      throw error;
+    }
+  }
+
+  async assignJobToTechnician(jobId, technicianId) {
+    try {
+      console.log('Assigning job:', jobId, 'to technician:', technicianId);
+      if (!mongoose.Types.ObjectId.isValid(jobId) || !mongoose.Types.ObjectId.isValid(technicianId)) {
+        throw new Error('Invalid job or technician ID');
+      }
+      const updatedJob = await Job.findByIdAndUpdate(
+        jobId,
+        { technician: technicianId },
+        { new: true, runValidators: true }
+      ).populate('technician', 'firstName lastName');
+      if (!updatedJob) throw new Error('Job not found');
+      console.log('Job assigned:', updatedJob);
+      return updatedJob;
+    } catch (error) {
+      console.error('Error assigning job to technician:', error.message, error.stack);
       throw error;
     }
   }

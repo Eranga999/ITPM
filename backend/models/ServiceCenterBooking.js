@@ -12,6 +12,11 @@ const serviceCenterBookingSchema = new mongoose.Schema({
     ref: 'ServiceCenter',
     required: [true, 'Service Center ID is required'],
   },
+  technicianId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Technician',
+    default: null, // Optional, as a booking may not have a technician assigned initially
+  },
   assignedDate: {
     type: Date,
     default: Date.now,

@@ -1,15 +1,24 @@
-// routes/serviceCenterRoutes.js
 import express from 'express';
 import serviceCenterController from '../controllers/serviceCenterController.js';
 
 const router = express.Router();
 
-router.post('/service-centers', serviceCenterController.createServiceCenter);
-router.get('/service-centers', serviceCenterController.getAllServiceCenters);
-router.put('/service-centers/:id', serviceCenterController.updateServiceCenter);
-router.delete('/service-centers/:id', serviceCenterController.deleteServiceCenter);
+// Create a new service center
+router.post('/', serviceCenterController.createServiceCenter);
 
-// New route for service center bookings
-router.get('/service-centers/:id/bookings', serviceCenterController.getServiceCenterBookings);
+// Get all service centers
+router.get('/', serviceCenterController.getAllServiceCenters);
+
+// Update a service center
+router.put('/:id', serviceCenterController.updateServiceCenter);
+
+// Delete a service center
+router.delete('/:id', serviceCenterController.deleteServiceCenter);
+
+// Get bookings for a service center
+router.get('/:id/bookings', serviceCenterController.getServiceCenterBookings);
+
+// Assign a technician to a booking
+router.post('/bookings/:bookingId/assign', serviceCenterController.assignBookingToTechnician);
 
 export default router;

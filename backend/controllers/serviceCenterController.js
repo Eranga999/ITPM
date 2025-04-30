@@ -49,6 +49,22 @@ class ServiceCenterController {
       res.status(500).json({ success: false, message: error.message });
     }
   }
+  async assignBookingToTechnician(req, res) {
+    try {
+      console.log('POST /api/service-centers/bookings/:bookingId/assign called');
+      const { bookingId } = req.params;
+      const { technicianId } = req.body;
+      const result = await serviceCenterService.assignBookingToTechnician(bookingId, technicianId);
+      res.status(200).json({
+        success: true,
+        data: result,
+        message: 'Technician assigned and job created successfully',
+      });
+    } catch (error) {
+      console.error('Controller error assigning technician:', error.message, error.stack);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
 
   // New endpoint for service center dashboard
   async getServiceCenterBookings(req, res) {
@@ -62,6 +78,7 @@ class ServiceCenterController {
       res.status(500).json({ success: false, message: error.message });
     }
   }
+  
 }
 
 export default new ServiceCenterController();
