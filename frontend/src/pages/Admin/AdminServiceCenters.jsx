@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import debounce from "lodash/debounce";
 import AdminSidebar from "../../components/AdminSidebar";
 
 // Validation schema using yup
@@ -36,10 +37,12 @@ const serviceCenterSchema = yup.object().shape({
 
 const ServiceCenters = () => {
   const [centers, setCenters] = useState([]);
+  const [filteredCenters, setFilteredCenters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const serviceOptions = ["AC", "Refrigerator", "TV", "Washing Machine", "Microwave"];
 
@@ -67,6 +70,7 @@ const ServiceCenters = () => {
       const response = await axios.get("http://localhost:5000/api/admin/service-centers");
       console.log("API Response:", response.data);
       setCenters(response.data.data);
+      setFilteredCenters(response.data.data); // Initialize filtered list
       setLoading(false);
     } catch (err) {
       console.error("Fetch error:", err.response ? err.response.data : err.message);
@@ -122,9 +126,47 @@ const ServiceCenters = () => {
     }
   };
 
+  // Debounced search function
+  const handleSearch = useMemo(
+    () =>
+      debounce((query) => {
+        const lowerQuery = query.toLowerCase();
+        const filtered = centers.filter(
+          (center) =>
+            center.name.toLowerCase().includes(lowerQuery) ||
+            center.address.toLowerCase().includes(lowerQuery) ||
+            center.phone.toLowerCase().includes(lowerQuery) ||
+            center.email.toLowerCase().includes(lowerQuery) ||
+            center.services.join(", ").toLowerCase().includes(lowerQuery)
+        );
+        setFilteredCenters(filtered);
+      }, 300),
+    [centers]
+  );
+
+  // Update search query and trigger search
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    handleSearch(query);
+  };
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchQuery("");
+    setFilteredCenters(centers);
+  };
+
   useEffect(() => {
     fetchServiceCenters();
   }, []);
+
+  // Cleanup debounce on component unmount
+  useEffect(() => {
+    return () => {
+      handleSearch.cancel();
+    };
+  }, [handleSearch]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -150,53 +192,116 @@ const ServiceCenters = () => {
           </div>
         </header>
 
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search service centers by name, address, phone, email, or services..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Search service centers"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
         {showForm && (
           <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">{editId ? "Edit Service Center" : "Add New Service Center"}</h2>
             <form onSubmit={handleSubmit(handleAddOrUpdateServiceCenter)} className="space-y-4">
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700">Name</label>
                 <input
                   type="text"
                   {...register("name")}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10 ${
                     errors.name ? "border-red-500" : ""
                   }`}
+                  aria-invalid={errors.name ? "true" : "false"}
+                  aria-describedby={errors.name ? "name-error" : undefined}
                 />
-                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
+                {errors.name && (
+                  <span
+                    className="absolute right-2 top-9 text-red-400 text-sm opacity-70 italic pointer-events-none"
+                    aria-hidden="true"
+                  >
+                    {errors.name.message}
+                  </span>
+                )}
+                {errors.name && <p id="name-error" className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
               </div>
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700">Address</label>
                 <input
                   type="text"
                   {...register("address")}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10 ${
                     errors.address ? "border-red-500" : ""
                   }`}
+                  aria-invalid={errors.address ? "true" : "false"}
+                  aria-describedby={errors.address ? "address-error" : undefined}
                 />
-                {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>}
+                {errors.address && (
+                  <span
+                    className="absolute right-2 top-9 text-red-400 text-sm opacity-70 italic pointer-events-none"
+                    aria-hidden="true"
+                  >
+                    {errors.address.message}
+                  </span>
+                )}
+                {errors.address && <p id="address-error" className="mt-1 text-sm text-red-600">{errors.address.message}</p>}
               </div>
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700">Phone</label>
                 <input
                   type="tel"
                   {...register("phone")}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10 ${
                     errors.phone ? "border-red-500" : ""
                   }`}
+                  aria-invalid={errors.phone ? "true" : "false"}
+                  aria-describedby={errors.phone ? "phone-error" : undefined}
                 />
-                {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>}
+                {errors.phone && (
+                  <span
+                    className="absolute right-2 top-9 text-red-400 text-sm opacity-70 italic pointer-events-none"
+                    aria-hidden="true"
+                  >
+                    {errors.phone.message}
+                  </span>
+                )}
+                {errors.phone && <p id="phone-error" className="mt-1 text-sm text-red-600">{errors.phone.message}</p>}
               </div>
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700">Email</label>
                 <input
                   type="email"
                   {...register("email")}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10 ${
                     errors.email ? "border-red-500" : ""
                   }`}
+                  aria-invalid={errors.email ? "true" : "false"}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                 />
-                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
+                {errors.email && (
+                  <span
+                    className="absolute right-2 top-9 text-red-400 text-sm opacity-70 italic pointer-events-none"
+                    aria-hidden="true"
+                  >
+                    {errors.email.message}
+                  </span>
+                )}
+                {errors.email && <p id="email-error" className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Services</label>
@@ -213,7 +318,7 @@ const ServiceCenters = () => {
                     </label>
                   ))}
                 </div>
-                {errors.services && <p className="mt-1 text-sm text-red-600">{errors.services.message}</p>}
+                {errors.services && <p id="services-error" className="mt-1 text-sm text-red-600">{errors.services.message}</p>}
               </div>
               <div className="flex space-x-4">
                 <button
@@ -238,43 +343,50 @@ const ServiceCenters = () => {
         )}
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-100 text-gray-600 uppercase text-sm">
-                <th className="py-3 px-6 text-left">Name</th>
-                <th className="py-3 px-6 text-left">Address</th>
-                <th className="py-3 px-6 text-left">Phone</th>
-                <th className="py-3 px-6 text-left">Email</th>
-                <th className="py-3 px-6 text-left">Services</th>
-                <th className="py-3 px-6 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {centers.map((center) => (
-                <tr key={center._id} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="py-4 px-6">{center.name}</td>
-                  <td className="py-4 px-6">{center.address}</td>
-                  <td className="py-4 px-6">{center.phone}</td>
-                  <td className="py-4 px-6">{center.email}</td>
-                  <td className="py-4 px-6">{center.services.join(", ")}</td>
-                  <td className="py-4 px-6 flex space-x-2">
-                    <button
-                      onClick={() => handleEditServiceCenter(center)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteServiceCenter(center._id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </td>
+          {filteredCenters.length === 0 && searchQuery && (
+            <div className="p-4 text-center text-gray-600">
+              No service centers found matching "{searchQuery}".
+            </div>
+          )}
+          {filteredCenters.length > 0 && (
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-100 text-gray-600 uppercase text-sm">
+                  <th className="py-3 px-6 text-left">Name</th>
+                  <th className="py-3 px-6 text-left">Address</th>
+                  <th className="py-3 px-6 text-left">Phone</th>
+                  <th className="py-3 px-6 text-left">Email</th>
+                  <th className="py-3 px-6 text-left">Services</th>
+                  <th className="py-3 px-6 text-left">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredCenters.map((center) => (
+                  <tr key={center._id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="py-4 px-6">{center.name}</td>
+                    <td className="py-4 px-6">{center.address}</td>
+                    <td className="py-4 px-6">{center.phone}</td>
+                    <td className="py-4 px-6">{center.email}</td>
+                    <td className="py-4 px-6">{center.services.join(", ")}</td>
+                    <td className="py-4 px-6 flex space-x-2">
+                      <button
+                        onClick={() => handleEditServiceCenter(center)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteServiceCenter(center._id)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
