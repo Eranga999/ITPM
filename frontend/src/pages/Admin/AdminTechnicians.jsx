@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import AdminSidebar from "../../components/AdminSidebar";
+import AdminSidebar from "../../components/AdminSidebar"; // Correct import
 
 const Technicians = () => {
   const [technicians, setTechnicians] = useState([]);
@@ -14,52 +14,6 @@ const Technicians = () => {
     address: "",
   });
   const [showForm, setShowForm] = useState(false);
-  const [errors, setErrors] = useState({}); // Added for validation errors
-
-  // Validation rules
-  const validateForm = () => {
-    let tempErrors = {};
-    
-    // First Name validation
-    if (!technician.firstName.trim()) {
-      tempErrors.firstName = "First name is required";
-    } else if (technician.firstName.length < 2) {
-      tempErrors.firstName = "First name must be at least 2 characters";
-    }
-
-    // Last Name validation
-    if (!technician.lastName.trim()) {
-      tempErrors.lastName = "Last name is required";
-    } else if (technician.lastName.length < 2) {
-      tempErrors.lastName = "Last name must be at least 2 characters";
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!technician.email) {
-      tempErrors.email = "Email is required";
-    } else if (!emailRegex.test(technician.email)) {
-      tempErrors.email = "Please enter a valid email address";
-    }
-
-    // Phone validation
-    const phoneRegex = /^\+?[\d\s-]{10,}$/;
-    if (!technician.phone) {
-      tempErrors.phone = "Phone number is required";
-    } else if (!phoneRegex.test(technician.phone)) {
-      tempErrors.phone = "Please enter a valid phone number (minimum 10 digits)";
-    }
-
-    // Address validation
-    if (!technician.address.trim()) {
-      tempErrors.address = "Address is required";
-    } else if (technician.address.length < 5) {
-      tempErrors.address = "Address must be at least 5 characters";
-    }
-
-    setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
-  };
 
   const fetchTechnicians = async () => {
     try {
@@ -76,26 +30,18 @@ const Technicians = () => {
   };
 
   const handleTechnicianChange = (e) => {
-    const { name, value } = e.target;
-    setTechnician({ ...technician, [name]: value });
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
-    }
+    setTechnician({ ...technician, [e.target.name]: e.target.value });
   };
 
   const handleAddTechnician = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-
     try {
       console.log("Adding technician:", technician);
       const response = await axios.post("http://localhost:5000/api/admin/technicians", technician);
       console.log("Add Technician Response:", response.data);
       setTechnician({ firstName: "", lastName: "", email: "", phone: "", address: "" });
       setShowForm(false);
-      setErrors({});
-      await fetchTechnicians();
+      await fetchTechnicians(); // Refresh the list
     } catch (err) {
       console.error("Add technician error:", err.response ? err.response.data : err.message);
       setError("Failed to add technician: " + (err.response?.data?.message || err.message));
@@ -111,7 +57,7 @@ const Technicians = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar />
+      <AdminSidebar /> {/* Changed from <Sidebar /> to <AdminSidebar /> */}
       <div className="flex-1 p-8">
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Technicians</h1>
@@ -137,14 +83,9 @@ const Technicians = () => {
                   name="firstName"
                   value={technician.firstName}
                   onChange={handleTechnicianChange}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
-                    errors.firstName ? "border-red-500" : ""
-                  }`}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   required
                 />
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-500">{errors.firstName}</p>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Last Name</label>
@@ -153,14 +94,9 @@ const Technicians = () => {
                   name="lastName"
                   value={technician.lastName}
                   onChange={handleTechnicianChange}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
-                    errors.lastName ? "border-red-500" : ""
-                  }`}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   required
                 />
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -169,14 +105,9 @@ const Technicians = () => {
                   name="email"
                   value={technician.email}
                   onChange={handleTechnicianChange}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
-                    errors.email ? "border-red-500" : ""
-                  }`}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   required
                 />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Phone</label>
@@ -185,14 +116,9 @@ const Technicians = () => {
                   name="phone"
                   value={technician.phone}
                   onChange={handleTechnicianChange}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
-                    errors.phone ? "border-red-500" : ""
-                  }`}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   required
                 />
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Address</label>
@@ -201,34 +127,23 @@ const Technicians = () => {
                   name="address"
                   value={technician.address}
                   onChange={handleTechnicianChange}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
-                    errors.address ? "border-red-500" : ""
-                  }`}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   required
                 />
-                {errors.address && (
-                  <p className="mt-1 text-sm text-red-500">{errors.address}</p>
-                )}
               </div>
-              <div className="flex space-x-2">
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                >
-                  Add Employee
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setErrors({});
-                    setTechnician({ firstName: "", lastName: "", email: "", phone: "", address: "" });
-                  }}
-                  className="text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md border border-gray-300"
-                >
-                  Cancel
-                </button>
-              </div>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              >
+                Add Employee
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="ml-2 text-gray-600 hover:text-gray-900"
+              >
+                Cancel
+              </button>
             </form>
           </div>
         )}

@@ -8,8 +8,8 @@ import technicianRoutes from './routes/technicianRoutes.js'; // New import
 import serviceCenterRoutes from './routes/serviceCenterRoutes.js'
 import jobRoutes from './routes/jobRoutes.js';
 import transportRoutes from './routes/transportRoutes.js'; // New import
-
-
+import authRoutes from './routes/authRoutes.js';
+import instantFixRoutes from './routes/instantFixRoutes.js'; 
 dotenv.config();
 
 const app = express();
@@ -32,16 +32,15 @@ mongoose
     console.error('MongoDB Connection Failed:', err.message);
     process.exit(1);
   });
-
+app.use('/api/auth', authRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', technicianRoutes);
 app.use('/api/admin', serviceCenterRoutes); // Mount technician routes under /api/admin
 app.use('/api/technician', jobRoutes);
-app.use('/api/technician', technicianRoutes); // Also mount technician routes under /api/technician
 app.use('/api/transport', transportRoutes);
 app.use('/api', serviceCenterRoutes);
-
+app.use('/api/instant-fix', instantFixRoutes);
 app.get('/', (req, res) => {
   res.send('Easy Fix Backend Running!');
 });

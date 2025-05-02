@@ -1,7 +1,7 @@
+// RepairRequests.js
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { jsPDF } from "jspdf";
 
 const RepairRequests = () => {
   const location = useLocation();
@@ -11,7 +11,6 @@ const RepairRequests = () => {
   const [selectedCenter, setSelectedCenter] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("All Status");
 
   const handleLogout = () => {
     navigate("/");
@@ -56,103 +55,8 @@ const RepairRequests = () => {
     }
   };
 
-  const generatePDFReport = () => {
-    const doc = new jsPDF();
-    const filteredRequests = statusFilter === "All Status"
-      ? repairRequests
-      : repairRequests.filter(request => request.status === statusFilter.toLowerCase());
-
-    // Set document properties
-    doc.setProperties({
-      title: 'Repair Requests Report',
-      author: 'RepairAdmin',
-      creator: 'RepairAdmin System'
-    });
-
-    // Header
-    doc.setFillColor(33, 150, 243); // Blue background
-    doc.rect(0, 0, 210, 40, 'F');
-    doc.setFontSize(24);
-    doc.setTextColor(255, 255, 255); // White text
-    doc.text('Repair Requests Report', 20, 25);
-    
-    // Subtitle
-    doc.setFontSize(12);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 35);
-    doc.text(`Status Filter: ${statusFilter}`, 150, 35);
-
-    // Table Headers
-    const headers = ['Customer', 'Appliance', 'Issue', 'Status', 'Technician', 'Date', 'Center'];
-    const startY = 50;
-    doc.setFillColor(240, 240, 240); // Light gray
-    doc.rect(20, startY, 170, 10, 'F');
-    doc.setTextColor(0, 0, 0); // Black text
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    
-    headers.forEach((header, index) => {
-      const xPos = 20 + (index * 27);
-      doc.text(header, xPos, startY + 7);
-    });
-
-    // Table Content
-    doc.setFont('helvetica', 'normal');
-    let yPos = startY + 15;
-    
-    filteredRequests.forEach((request, index) => {
-      if (yPos > 270) { // New page if content exceeds page height
-        doc.addPage();
-        yPos = 20;
-      }
-      
-      const rowColor = index % 2 === 0 ? 245 : 255;
-      doc.setFillColor(rowColor, rowColor, rowColor);
-      doc.rect(20, yPos - 5, 170, 10, 'F');
-
-      const centerName = request.status !== 'pending'
-        ? serviceCenters.find(center => center._id === request.serviceCenterId)?.name || '-'
-        : '-';
-
-      const rowData = [
-        request.name || '-',
-        request.serviceType || '-',
-        request.description || '-',
-        request.status || '-',
-        request.technicianAssigned?.name || '-',
-        new Date(request.preferredDate).toLocaleDateString(),
-        centerName
-      ];
-
-      rowData.forEach((data, i) => {
-        const xPos = 20 + (i * 27);
-        // Truncate long text
-        const truncated = data.length > 15 ? data.substring(0, 12) + '...' : data;
-        doc.text(truncated, xPos, yPos);
-      });
-
-      yPos += 10;
-    });
-
-    // Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(100);
-      doc.text(`Page ${i} of ${pageCount}`, 180, 290);
-      doc.text('© RepairAdmin System', 20, 290);
-    }
-
-    // Save the PDF
-    doc.save(`repair_requests_${new Date().toISOString().split('T')[0]}.pdf`);
-  };
-
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
-
-  const displayedRequests = statusFilter === "All Status"
-    ? repairRequests
-    : repairRequests.filter(request => request.status === statusFilter.toLowerCase());
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -207,23 +111,14 @@ const RepairRequests = () => {
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Repair Requests</h1>
           <div className="flex items-center space-x-4">
-            <select 
-              className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600" 
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
+            <select className="border border-gray-300 rounded-md px-3 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600" defaultValue="All Status">
               <option value="All Status">All Status</option>
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
-            <button 
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              onClick={generatePDFReport}
-            >
-              Export PDF Report
-            </button>
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Export Report</button>
             <div className="text-gray-600 cursor-pointer">👤 Profile</div>
           </div>
         </header>
@@ -243,7 +138,7 @@ const RepairRequests = () => {
               </tr>
             </thead>
             <tbody>
-              {displayedRequests.map((request) => (
+              {repairRequests.map((request) => (
                 <tr key={request._id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="py-4 px-6">{request.name}</td>
                   <td className="py-4 px-6">{request.serviceType}</td>

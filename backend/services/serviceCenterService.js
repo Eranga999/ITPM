@@ -60,16 +60,11 @@ class ServiceCenterService {
   // New method to get bookings for a service center
   async getServiceCenterBookings(serviceCenterId) {
     try {
-      console.log('Fetching bookings for service center ID:', serviceCenterId);
+      console.log('Fetching bookings for service center:', serviceCenterId);
       const bookings = await ServiceCenterBooking.find({ serviceCenterId })
-        .populate({
-          path: 'bookingId',
-          populate: {
-            path: 'technicianAssigned',
-            model: 'Technician'
-          }
-        });
-      console.log('Bookings retrieved:', bookings);
+        .populate('bookingId', 'name serviceType description status preferredDate')
+        .populate('serviceCenterId', 'name location');
+      console.log('Service center bookings retrieved:', bookings);
       return bookings;
     } catch (error) {
       console.error('Error fetching service center bookings:', error.message, error.stack);
