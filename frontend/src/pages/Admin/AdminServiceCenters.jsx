@@ -1,22 +1,65 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import AdminSidebar from "../../components/AdminSidebar"; // Adjust path as needed
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import AdminSidebar from "../../components/AdminSidebar";
+
+// Validation schema using yup
+const serviceCenterSchema = yup.object().shape({
+  name: yup
+    .string()
+    .required("Name is required")
+    .min(3, "Name must be at least 3 characters")
+    .max(100, "Name cannot exceed 100 characters")
+    .matches(/^[A-Za-z0-9\s]+$/, "Name can only contain letters, numbers, and spaces"),
+  address: yup
+    .string()
+    .required("Address is required")
+    .min(5, "Address must be at least 5 characters")
+    .max(200, "Address cannot exceed 200 characters"),
+  phone: yup
+    .string()
+    .required("Phone number is required")
+    .matches(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format (e.g., +1234567890)")
+    .max(15, "Phone number cannot exceed 15 characters"),
+  email: yup
+    .string()
+    .required("Email is required")
+    .email("Invalid email format")
+    .max(100, "Email cannot exceed 100 characters"),
+  services: yup
+    .array()
+    .min(1, "At least one service must be selected")
+    .required("Services are required"),
+});
 
 const ServiceCenters = () => {
   const [centers, setCenters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [center, setCenter] = useState({
-    name: "",
-    address: "",
-    phone: "",
-    email: "",
-    services: [],
-  });
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
   const serviceOptions = ["AC", "Refrigerator", "TV", "Washing Machine", "Microwave"];
+
+  // Initialize react-hook-form
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(serviceCenterSchema),
+    defaultValues: {
+      name: "",
+      address: "",
+      phone: "",
+      email: "",
+      services: [],
+    },
+  });
 
   const fetchServiceCenters = async () => {
     try {
@@ -32,35 +75,20 @@ const ServiceCenters = () => {
     }
   };
 
-  const handleCenterChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (type === "checkbox") {
-      setCenter((prev) => {
-        const services = checked
-          ? [...prev.services, value]
-          : prev.services.filter((service) => service !== value);
-        return { ...prev, services };
-      });
-    } else {
-      setCenter({ ...center, [name]: value });
-    }
-  };
-
-  const handleAddOrUpdateServiceCenter = async (e) => {
-    e.preventDefault();
+  const handleAddOrUpdateServiceCenter = async (data) => {
     try {
       if (editId) {
         // Update existing service center
-        console.log("Updating service center:", center);
-        const response = await axios.put(`http://localhost:5000/api/admin/service-centers/${editId}`, center);
+        console.log("Updating service center:", data);
+        const response = await axios.put(`http://localhost:5000/api/admin/service-centers/${editId}`, data);
         console.log("Update Service Center Response:", response.data);
       } else {
         // Add new service center
-        console.log("Adding service center:", center);
-        const response = await axios.post("http://localhost:5000/api/admin/service-centers", center);
+        console.log("Adding service center:", data);
+        const response = await axios.post("http://localhost:5000/api/admin/service-centers", data);
         console.log("Add Service Center Response:", response.data);
       }
-      setCenter({ name: "", address: "", phone: "", email: "", services: [] });
+      reset(); // Reset form after successful submission
       setEditId(null);
       setShowForm(false);
       await fetchServiceCenters(); // Refresh the list
@@ -71,13 +99,11 @@ const ServiceCenters = () => {
   };
 
   const handleEditServiceCenter = (center) => {
-    setCenter({
-      name: center.name,
-      address: center.address,
-      phone: center.phone,
-      email: center.email,
-      services: center.services,
-    });
+    setValue("name", center.name);
+    setValue("address", center.address);
+    setValue("phone", center.phone);
+    setValue("email", center.email);
+    setValue("services", center.services);
     setEditId(center._id);
     setShowForm(true);
   };
@@ -114,7 +140,7 @@ const ServiceCenters = () => {
               onClick={() => {
                 setShowForm(true);
                 setEditId(null);
-                setCenter({ name: "", address: "", phone: "", email: "", services: [] });
+                reset();
               }}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
             >
@@ -127,50 +153,50 @@ const ServiceCenters = () => {
         {showForm && (
           <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">{editId ? "Edit Service Center" : "Add New Service Center"}</h2>
-            <form onSubmit={handleAddOrUpdateServiceCenter} className="space-y-4">
+            <form onSubmit={handleSubmit(handleAddOrUpdateServiceCenter)} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
                 <input
                   type="text"
-                  name="name"
-                  value={center.name}
-                  onChange={handleCenterChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  required
+                  {...register("name")}
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
+                    errors.name ? "border-red-500" : ""
+                  }`}
                 />
+                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Address</label>
                 <input
                   type="text"
-                  name="address"
-                  value={center.address}
-                  onChange={handleCenterChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  required
+                  {...register("address")}
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
+                    errors.address ? "border-red-500" : ""
+                  }`}
                 />
+                {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Phone</label>
                 <input
                   type="tel"
-                  name="phone"
-                  value={center.phone}
-                  onChange={handleCenterChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  required
+                  {...register("phone")}
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
+                    errors.phone ? "border-red-500" : ""
+                  }`}
                 />
+                {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
                 <input
                   type="email"
-                  name="email"
-                  value={center.email}
-                  onChange={handleCenterChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  required
+                  {...register("email")}
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
+                    errors.email ? "border-red-500" : ""
+                  }`}
                 />
+                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Services</label>
@@ -179,30 +205,34 @@ const ServiceCenters = () => {
                     <label key={service} className="flex items-center">
                       <input
                         type="checkbox"
-                        name="services"
                         value={service}
-                        checked={center.services.includes(service)}
-                        onChange={handleCenterChange}
-                        className="mr-2"
+                        {...register("services")}
+                        className={`mr-2 ${errors.services ? "border-red-500" : ""}`}
                       />
                       {service}
                     </label>
                   ))}
                 </div>
+                {errors.services && <p className="mt-1 text-sm text-red-600">{errors.services.message}</p>}
               </div>
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                {editId ? "Update Service Center" : "Add Service Center"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="ml-2 text-gray-600 hover:text-gray-900"
-              >
-                Cancel
-              </button>
+              <div className="flex space-x-4">
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                >
+                  {editId ? "Update Service Center" : "Add Service Center"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForm(false);
+                    reset();
+                  }}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
         )}
