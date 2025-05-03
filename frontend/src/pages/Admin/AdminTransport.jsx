@@ -11,9 +11,12 @@ import {
   Filter,
   ArrowUpDown,
   Settings,
-  Building2
+  Building2,
+  Download
 } from 'lucide-react';
-import AdminSidebar from '../../components/AdminSidebar'; // Import the sidebar
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import AdminSidebar from '../../components/AdminSidebar';
 
 const Transport = () => {
   const [transportRequests, setTransportRequests] = useState([]);
@@ -43,11 +46,64 @@ const Transport = () => {
         status: newStatus,
       });
       console.log('Update Status Response:', response.data);
-      fetchTransportRequests(); // Refresh the list
+      fetchTransportRequests();
     } catch (err) {
       console.error('Update status error:', err.response ? err.response.data : err.message);
       setError('Failed to update status: ' + (err.response?.data?.message || err.message));
     }
+  };
+
+  const generateReport = () => {
+    const doc = new jsPDF();
+    
+    // Set document properties
+    doc.setFontSize(16);
+    doc.text('Transport Requests Report', 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${format(new Date(), 'MMM d, yyyy')}`, 14, 30);
+
+    // Define table columns and rows
+    const headers = [
+      'Request ID',
+      'Appliance',
+      'Issue',
+      'Status',
+      'Service Center',
+      'Request Date',
+      'Notes'
+    ];
+
+    const rows = filteredRequests.map(request => [
+      request._id,
+      request.job?.appliance || 'N/A',
+      request.job?.issue || 'N/A',
+      request.status,
+      `${request.serviceCenter?.name || 'N/A'} - ${request.serviceCenter?.location || 'N/A'}`,
+      format(new Date(request.requestDate), 'MMM d, yyyy'),
+      request.notes || 'None'
+    ]);
+
+    // Generate table using autoTable
+    doc.autoTable({
+      startY: 40,
+      head: [headers],
+      body: rows,
+      theme: 'striped',
+      headStyles: { fillColor: [0, 102, 204], textColor: [255, 255, 255] },
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: {
+        0: { cellWidth: 30 }, // Request ID
+        1: { cellWidth: 20 }, // Appliance
+        2: { cellWidth: 20 }, // Issue
+        3: { cellWidth: 20 }, // Status
+        4: { cellWidth: 30 }, // Service Center
+        5: { cellWidth: 20 }, // Request Date
+        6: { cellWidth: 30 }  // Notes
+      }
+    });
+
+    // Save the PDF
+    doc.save(`transport_requests_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   useEffect(() => {
@@ -76,12 +132,8 @@ const Transport = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <AdminSidebar />
-
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <header className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
@@ -103,10 +155,7 @@ const Transport = () => {
             </div>
           </div>
         </header>
-
-        {/* Main Content */}
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Controls */}
           <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
             <div className="flex flex-1 gap-4">
               <div className="relative flex-1">
@@ -146,9 +195,14 @@ const Transport = () => {
                 </select>
               </div>
             </div>
+            <button
+              onClick={generateReport}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Download className="h-5 w-5" />
+              Generate PDF Report
+            </button>
           </div>
-
-          {/* Requests Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredRequests.length === 0 ? (
               <p className="text-gray-600">No transport requests available.</p>
@@ -177,7 +231,6 @@ const Transport = () => {
                       <span className="text-sm font-medium">{request.status}</span>
                     </div>
                   </div>
-
                   <div className="space-y-3">
                     <div className="flex items-start gap-2">
                       <Building2 className="w-4 h-4 text-gray-400 mt-1" />
@@ -194,7 +247,6 @@ const Transport = () => {
                       </div>
                     </div>
                   </div>
-
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Request Date:</span>
@@ -205,7 +257,6 @@ const Transport = () => {
                       <p className="mt-1">{request.notes || 'None'}</p>
                     </div>
                   </div>
-
                   <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
                     {request.status === 'Pending' && (
                       <>
