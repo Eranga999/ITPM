@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaUser, FaClipboardList, FaTools, FaMapMarkerAlt, FaHeadset, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { FaUser, FaClipboardList, FaTools, FaMapMarkerAlt, FaHeadset, FaCog, FaSignOutAlt, FaCreditCard } from 'react-icons/fa';
 import logo from '../../assets/logo.png';
 
 const CusDashboardNavigationBar = () => {
@@ -32,6 +32,7 @@ const CusDashboardNavigationBar = () => {
           { icon: FaClipboardList, text: 'Edit Bookings', path: '/edit-booking' },
           { icon: FaTools, text: 'Repair history', path: '/repair-history' },
           { icon: FaMapMarkerAlt, text: 'Track Repairs', path: '/tracking' },
+          { icon: FaCreditCard, text: 'Payments', path: '/payments' },
           { icon: FaHeadset, text: 'Support', path: '/support' },
           { icon: FaCog, text: 'Settings', path: '/settings' },
         ].map((item, index) => (

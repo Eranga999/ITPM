@@ -13,7 +13,7 @@ import {
   Calendar,
   MapPin,
   User,
-  PenTool, // Changed from Tool to PenTool
+  PenTool,
   MessageSquare,
   Trash2,
   PlayCircle,
@@ -24,6 +24,7 @@ const PendingJobs = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
+  const [completedRequests, setCompletedRequests] = useState([]); // New state for completed repair requests
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,18 +36,19 @@ const PendingJobs = () => {
     notes: '',
   });
   const [formData, setFormData] = useState({
+    repairRequestId: '', // New field for selected repair request
     customerName: '',
     appliance: '',
     issue: '',
     address: '',
     urgency: 'Medium',
-    date: '2025-03-16',
+    date: format(new Date(), 'yyyy-MM-dd'),
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('date');
 
-  const technicianId = '670f5a1b2c8d4e9f1a2b3c4d'; // Replace with your actual technician ID
+  const technicianId = '670f5a1b2c8d4e9f1a2b3c4d'; // Replace with actual technician ID
 
   const fetchPendingJobs = async () => {
     try {
@@ -60,6 +62,19 @@ const PendingJobs = () => {
       console.error('Fetch error:', err.response ? err.response.data : err.message);
       setError('Failed to load pending jobs: ' + (err.response?.data?.message || err.message));
       setLoading(false);
+    }
+  };
+
+  const fetchCompletedRequests = async () => {
+    try {
+      console.log('Fetching completed repair requests');
+      const response = await axios.get('http://localhost:5000/api/admin/repair-requests', {
+        params: { status: 'completed' },
+      });
+      setCompletedRequests(response.data.data);
+    } catch (err) {
+      console.error('Fetch completed requests error:', err.response ? err.response.data : err.message);
+      setError('Failed to load completed requests: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -81,12 +96,13 @@ const PendingJobs = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setFormData({
+      repairRequestId: '',
       customerName: '',
       appliance: '',
       issue: '',
       address: '',
       urgency: 'Medium',
-      date: '2025-03-16',
+      date: format(new Date(), 'yyyy-MM-dd'),
     });
   };
 
@@ -106,10 +122,25 @@ const PendingJobs = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    if (name === 'repairRequestId') {
+      const selectedRequest = completedRequests.find((req) => req._id === value);
+      setFormData({
+        repairRequestId: value,
+        customerName: selectedRequest?.name || '',
+        appliance: selectedRequest?.serviceType || '',
+        issue: selectedRequest?.description || '',
+        address: selectedRequest?.address || '',
+        urgency: 'Medium',
+        date: selectedRequest?.preferredDate
+          ? format(new Date(selectedRequest.preferredDate), 'yyyy-MM-dd')
+          : format(new Date(), 'yyyy-MM-dd'),
+      });
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
   };
 
   const handleTransportInputChange = (e) => {
@@ -125,9 +156,14 @@ const PendingJobs = () => {
     try {
       console.log('Submitting new job:', formData);
       const jobData = {
-        ...formData,
+        customerName: formData.customerName,
+        appliance: formData.appliance,
+        issue: formData.issue,
+        address: formData.address,
+        urgency: formData.urgency,
         date: new Date(formData.date).toISOString(),
         technician: technicianId,
+        status: 'Pending',
       };
       const response = await axios.post('http://localhost:5000/api/technician/jobs', jobData);
       console.log('Add Job Response:', response.data);
@@ -203,6 +239,7 @@ const PendingJobs = () => {
 
   useEffect(() => {
     fetchPendingJobs();
+    fetchCompletedRequests(); // Fetch completed repair requests
     fetchServiceCenters();
   }, []);
 
@@ -251,7 +288,7 @@ const PendingJobs = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="bg-blue-600 p-2 rounded-lg">
-                  <PenTool className="h-6 w-6 text-white" /> {/* Changed from Tool */}
+                  <PenTool className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Pending Jobs</h1>
@@ -313,7 +350,7 @@ const PendingJobs = () => {
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-start space-x-3">
                         <div className="mt-1">
-                          <PenTool className="w-5 h-5 text-gray-400" /> {/* Changed from Tool */}
+                          <PenTool className="w-5 h-5 text-gray-400" />
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{job.appliance}</h3>
@@ -409,6 +446,26 @@ const PendingJobs = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Add New Job</h2>
             <form onSubmit={handleAddJob}>
+              <div className="mb-4">
+                <label htmlFor="repairRequestId" className="block text-gray-700 mb-1">
+                  Select Completed Repair Request
+                </label>
+                <select
+                  id="repairRequestId"
+                  name="repairRequestId"
+                  value={formData.repairRequestId}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select a repair request</option>
+                  {completedRequests.map((req) => (
+                    <option key={req._id} value={req._id}>
+                      {req.name} - {req.serviceType} ({format(new Date(req.preferredDate), 'MMM d, yyyy')})
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="mb-4">
                 <label htmlFor="customerName" className="block text-gray-700 mb-1">
                   Customer Name

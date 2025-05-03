@@ -25,6 +25,8 @@ import CustomerSignup from './pages/Customer/CustomerSignup';
 import StaffLogin from './pages/StaffLogin';
 import Settings from './components/CustomerComponent/Settings';
 import InstantFixMode from './components/CustomerComponent/InstantFixMode';
+import PaymentSummaryView from './pages/ServiceCenter/PaymentSummaryView';  
+import PaymentForm from './pages/ServiceCenter/PaymentForm';
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -74,6 +76,10 @@ function App() {
         <Route path="/admin-dashboard/payments" element={<Payments />} />
 
         <Route path="/service-center-dashboard" element={<ServiceCenterDashboard />} />
+        <Route path="/service-center-payment-summry" element={<PaymentSummaryView />} />
+        <Route path="/payments" element={<PaymentForm />} />
+        
+
        
      
 
