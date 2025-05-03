@@ -27,6 +27,7 @@ import Settings from './components/CustomerComponent/Settings';
 import InstantFixMode from './components/CustomerComponent/InstantFixMode';
 import PaymentSummaryView from './pages/ServiceCenter/PaymentSummaryView';  
 import PaymentForm from './pages/ServiceCenter/PaymentForm';
+import StaffSignup from './pages/StaffSignup';
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
@@ -48,8 +49,9 @@ function App() {
       <Routes>
         {/* Default Route Redirects to Login */}
         <Route path="/" element={<CustomerLogin />} />
-
         <Route path="/staff-login" element={<StaffLogin />} />
+        <Route path="/staff-signup" element={<StaffSignup />} />
+  
         
         {/* Customer Dashboard */}
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />

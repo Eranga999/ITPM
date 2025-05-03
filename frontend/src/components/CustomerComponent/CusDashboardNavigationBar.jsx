@@ -30,7 +30,6 @@ const CusDashboardNavigationBar = () => {
         {[
           { icon: FaUser, text: 'Profile', path: '/customer-dashboard' },
           { icon: FaClipboardList, text: 'Edit Bookings', path: '/edit-booking' },
-          { icon: FaTools, text: 'Repair history', path: '/repair-history' },
           { icon: FaMapMarkerAlt, text: 'Track Repairs', path: '/tracking' },
           { icon: FaCreditCard, text: 'Payments', path: '/payments' },
           { icon: FaHeadset, text: 'Support', path: '/support' },

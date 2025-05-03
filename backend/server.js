@@ -11,6 +11,7 @@ import transportRoutes from './routes/transportRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import instantFixRoutes from './routes/instantFixRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import staffRoutes from './routes/staffRoutes.js';
 
 dotenv.config();
 
@@ -35,16 +36,20 @@ mongoose
     process.exit(1);
   });
 
+// Specific routes first
+app.use('/api/staff', staffRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', technicianRoutes);
 app.use('/api/admin', serviceCenterRoutes);
 app.use('/api/technician', jobRoutes);
 app.use('/api/transport', transportRoutes);
-app.use('/api', serviceCenterRoutes);
 app.use('/api/instant-fix', instantFixRoutes);
 app.use('/api/payments', paymentRoutes);
+// More general routes last
+app.use('/api', bookingRoutes);
+app.use('/api', serviceCenterRoutes);
+
 app.get('/', (req, res) => {
   res.send('Easy Fix Backend Running!');
 });

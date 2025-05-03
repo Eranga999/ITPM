@@ -14,6 +14,7 @@ const CustomerProfile = ({ isDarkMode }) => {
     progress: 0,
   });
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
     const fetchCustomerProfile = async () => {
@@ -62,7 +63,29 @@ const CustomerProfile = ({ isDarkMode }) => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'phone') {
+      const cleanedValue = value.replace(/[^+\d]/g, '');
+      let errorMsg = '';
+      if (value !== cleanedValue) {
+        errorMsg = 'Only numbers and an optional "+" are allowed';
+      } else if (cleanedValue.startsWith('+')) {
+        const rest = cleanedValue.slice(1);
+        if (!/^\d*$/.test(rest)) {
+          errorMsg = 'Only numbers are allowed after "+"';
+        }
+      } else if (!/^\d*$/.test(cleanedValue)) {
+        errorMsg = 'Only numbers are allowed';
+      }
+      setPhoneError(errorMsg);
+      if (!errorMsg) {
+        setFormData({ ...formData, [name]: cleanedValue });
+      } else if (cleanedValue === '') {
+        setFormData({ ...formData, [name]: '' });
+      }
+      return;
+    }
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -70,6 +93,15 @@ const CustomerProfile = ({ isDarkMode }) => {
     setIsSubmitted(false);
     setError('');
     setLoadingState({ isLoading: true, progress: 10 });
+
+    // Phone length validation on submit
+    if (formData.phone.length < 10 || formData.phone.length > 15) {
+      setPhoneError('Phone must be between 10 and 15 digits');
+      setLoadingState({ isLoading: false, progress: 100 });
+      return;
+    } else {
+      setPhoneError('');
+    }
 
     const token = localStorage.getItem('token');
     if (!token) {
@@ -267,6 +299,9 @@ const CustomerProfile = ({ isDarkMode }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={field.icon} />
                 </svg>
               </div>
+              {field.name === 'phone' && phoneError && (
+                <p className="text-red-500 text-xs mt-1">{phoneError}</p>
+              )}
             </div>
           ))}
 
