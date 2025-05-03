@@ -92,14 +92,30 @@ const BookingForm = () => {
 
     if (name === 'phone') {
       const cleanedValue = value.replace(/[^+\d]/g, '');
-      if (cleanedValue.startsWith('+')) {
+      let errorMsg = '';
+
+      // Check for invalid characters
+      if (value !== cleanedValue) {
+        errorMsg = 'Only numbers and an optional "+" are allowed';
+      } else if (cleanedValue.startsWith('+')) {
         const rest = cleanedValue.slice(1);
-        if (!/^\d*$/.test(rest)) return;
-      } else {
-        if (!/^\d*$/.test(cleanedValue)) return;
+        if (!/^\d*$/.test(rest)) {
+          errorMsg = 'Only numbers are allowed after "+"';
+        }
+      } else if (!/^\d*$/.test(cleanedValue)) {
+        errorMsg = 'Only numbers are allowed';
       }
-      if (cleanedValue.length > 15) return;
-      setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
+
+      // Set error immediately if invalid
+      setErrors((prev) => ({ ...prev, phone: errorMsg }));
+
+      // Only update state if valid or empty
+      if (!errorMsg && cleanedValue.length <= 15) {
+        setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
+      } else if (cleanedValue === '') {
+        setFormData((prev) => ({ ...prev, [name]: '' }));
+      }
+      return;
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }

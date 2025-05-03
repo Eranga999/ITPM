@@ -19,13 +19,33 @@ const CustomerSignup = () => {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    if (name === 'phone') {
+      const cleanedValue = value.replace(/[^+\d]/g, '');
+      let errorMsg = '';
+      if (value !== cleanedValue) {
+        errorMsg = 'Only numbers and an optional "+" are allowed';
+      } else if (cleanedValue.startsWith('+')) {
+        const rest = cleanedValue.slice(1);
+        if (!/^\d*$/.test(rest)) {
+          errorMsg = 'Only numbers are allowed after "+"';
+        }
+      } else if (!/^\d*$/.test(cleanedValue)) {
+        errorMsg = 'Only numbers are allowed';
+      }
+      setPhoneError(errorMsg);
+      if (!errorMsg) {
+        setFormData({ ...formData, [name]: cleanedValue });
+      } else if (cleanedValue === '') {
+        setFormData({ ...formData, [name]: '' });
+      }
+      return;
+    }
+    setFormData({ ...formData, [name]: value });
   };
 
   const togglePasswordVisibility = () => {
@@ -40,6 +60,21 @@ const CustomerSignup = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Phone length validation on submit
+    if (formData.phone.length < 10 || formData.phone.length > 15) {
+      setPhoneError('Phone must be between 10 and 15 digits');
+      setLoading(false);
+      return;
+    } else {
+      setPhoneError('');
+    }
+
+    if (phoneError) {
+      setError('Please fix the phone number');
+      setLoading(false);
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -190,6 +225,7 @@ const CustomerSignup = () => {
                       required
                     />
                   </div>
+                  {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
                 </div>
 
                 <div>

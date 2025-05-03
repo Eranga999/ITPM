@@ -152,6 +152,8 @@ const InstantFixMode = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [message, setMessage] = useState("");
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const navigate = useNavigate();
 
   const handleTypeChange = (e) => {
@@ -189,9 +191,13 @@ const InstantFixMode = () => {
     try {
       const res = await axios.post("http://localhost:5000/api/instant-fix/submit", formData);
       setMessage("Fix request submitted successfully!");
+      setPaymentSuccess(true);
+      setShowPaymentPopup(true);
     } catch (error) {
       console.error(error);
       setMessage("Submission failed. Try again.");
+      setPaymentSuccess(false);
+      setShowPaymentPopup(false);
     }
   };
 
@@ -200,93 +206,111 @@ const InstantFixMode = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-gray-100">
       {/* Your Existing Header */}
       <Header />
 
       {/* Main Content */}
       <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-lg w-full bg-white rounded-2xl shadow-xl p-8 transform transition-all hover:scale-105 duration-300">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-6">
+        <div className="max-w-lg w-full bg-white/90 rounded-3xl shadow-2xl p-10 transform transition-all hover:scale-105 duration-300 border border-indigo-100 backdrop-blur-md">
+          <h2 className="text-4xl font-extrabold text-indigo-800 text-center mb-2 tracking-tight drop-shadow-lg">
             Instant Fix Mode
           </h2>
+          <p className="text-center text-indigo-400 mb-8 text-lg font-medium">Get quick solutions or request expert help</p>
 
-          <div className="space-y-6">
+          <div className="space-y-7">
             {/* Appliance Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Appliance Type
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <span role="img" aria-label="appliance" className="mr-1">🔧</span> Appliance Type
               </label>
-              <select
-                className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-                value={type}
-                onChange={handleTypeChange}
-              >
-                <option value="">Select Type</option>
-                {Object.keys(issuesByType).map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  className="w-full border border-indigo-200 rounded-xl p-3 text-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition duration-200 shadow-sm bg-white appearance-none pr-10"
+                  value={type}
+                  onChange={handleTypeChange}
+                >
+                  <option value="">Select Type</option>
+                  {Object.keys(issuesByType).map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-indigo-400 pointer-events-none text-xl">⬇️</span>
+              </div>
             </div>
 
             {/* Issue */}
             {type && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Issue
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <span role="img" aria-label="issue" className="mr-1">⚠️</span> Issue
                 </label>
-                <select
-                  className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-                  value={issue}
-                  onChange={handleIssueChange}
-                >
-                  <option value="">Select Issue</option>
-                  {issuesByType[type].map((i) => (
-                    <option key={i} value={i}>
-                      {i}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    className="w-full border border-indigo-200 rounded-xl p-3 text-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition duration-200 shadow-sm bg-white appearance-none pr-10"
+                    value={issue}
+                    onChange={handleIssueChange}
+                  >
+                    <option value="">Select Issue</option>
+                    {issuesByType[type].map((i) => (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-indigo-400 pointer-events-none text-xl">⬇️</span>
+                </div>
               </div>
             )}
 
             {/* File Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Upload Image/Audio
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <span role="img" aria-label="upload" className="mr-1">📎</span> Upload Image/Audio
               </label>
-              <div className="relative">
-                <input
-                  type="file"
-                  onChange={handleFileChange}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-200"
-                />
+              <div className="relative group">
+                <label htmlFor="file-upload" className="flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 rounded-xl p-6 cursor-pointer bg-indigo-50 hover:bg-indigo-100 transition duration-200">
+                  <span className="text-3xl text-indigo-400 mb-2">⬆️</span>
+                  <span className="text-gray-500">Drag & drop or click to upload</span>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
                 {fileName && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    Uploaded: <span className="font-medium">{fileName}</span>
-                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    {file && file.type.startsWith('image') ? (
+                      <img src={URL.createObjectURL(file)} alt="preview" className="w-10 h-10 object-cover rounded shadow" />
+                    ) : file && file.type.startsWith('audio') ? (
+                      <span className="text-2xl">🎵</span>
+                    ) : null}
+                    <span className="text-sm text-gray-700 font-medium truncate max-w-xs">{fileName}</span>
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Diagnosis */}
             {diagnosis && (
-              <div className="bg-green-50 text-green-800 p-4 rounded-lg shadow-inner animate-fade-in">
-                <strong className="block text-lg font-semibold mb-2">
-                  Possible Fix:
-                </strong>
-                <p>{diagnosis.text}</p>
+              <div className="bg-green-50 border-l-4 border-green-400 text-green-900 p-5 rounded-xl shadow-inner animate-fade-in flex flex-col gap-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-green-500 text-2xl">✅</span>
+                  <strong className="text-lg font-semibold">Possible Fix:</strong>
+                </div>
+                <p className="ml-8 text-base">{diagnosis.text}</p>
                 {diagnosis.video && (
-                  <div className="mt-4">
+                  <div className="mt-3 ml-8">
                     <iframe
                       width="100%"
                       height="200"
                       src={diagnosis.video}
                       title="Fix Tutorial"
                       allowFullScreen
-                      className="rounded-lg shadow-md"
+                      className="rounded-lg shadow-md border border-green-200"
                     ></iframe>
                   </div>
                 )}
@@ -294,32 +318,52 @@ const InstantFixMode = () => {
             )}
 
             {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+            <div className="flex flex-col sm:flex-row gap-4 mt-7">
               <button
                 onClick={handleSubmit}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transform hover:scale-105 transition duration-200"
+                className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition duration-200 flex items-center justify-center gap-2 text-lg"
               >
-                Submit Fix Request
+                <span role="img" aria-label="submit">🚀</span> Submit Fix Request
               </button>
               <button
                 onClick={handleTechnicianRequest}
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transform hover:scale-105 transition duration-200"
+                className="w-full bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition duration-200 flex items-center justify-center gap-2 text-lg"
               >
-                Contact Support Center
+                <span role="img" aria-label="support">🛠️</span> Contact Support Center
               </button>
             </div>
 
             {/* Message */}
-            {message && (
+            {message && !showPaymentPopup && (
               <p
-                className={`text-center text-sm mt-4 ${
+                className={`text-center text-base mt-4 font-semibold animate-fade-in ${
                   message.includes("successfully")
                     ? "text-green-600"
                     : "text-red-600"
-                } animate-fade-in`}
+                }`}
               >
                 {message}
               </p>
+            )}
+            {/* Payment Success Popup */}
+            {showPaymentPopup && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full flex flex-col items-center animate-fade-in">
+                  <div className="bg-green-100 rounded-full p-4 mb-4">
+                    <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-green-700 mb-2">Request sent Successful!</h3>
+                  <p className="text-gray-700 mb-6 text-center">Thank you for your request. Your fix request has been submitted successfully!</p>
+                  <button
+                    onClick={() => setShowPaymentPopup(false)}
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
