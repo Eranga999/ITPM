@@ -1,41 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import debounce from "lodash/debounce";
 import AdminSidebar from "../../components/AdminSidebar";
-
-// Validation schema using yup
-const technicianSchema = yup.object().shape({
-  firstName: yup
-    .string()
-    .required("First name is required")
-    .min(2, "First name must be at least 2 characters")
-    .max(50, "First name cannot exceed 50 characters")
-    .matches(/^[A-Za-z\s]+$/, "First name can only contain letters and spaces"),
-  lastName: yup
-    .string()
-    .required("Last name is required")
-    .min(2, "Last name must be at least 2 characters")
-    .max(50, "Last name cannot exceed 50 characters")
-    .matches(/^[A-Za-z\s]+$/, "Last name can only contain letters and spaces"),
-  email: yup
-    .string()
-    .required("Email is required")
-    .email("Invalid email format")
-    .max(100, "Email cannot exceed 100 characters"),
-  phone: yup
-    .string()
-    .required("Phone number is required")
-    .matches(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format (e.g., +1234567890)")
-    .max(15, "Phone number cannot exceed 15 characters"),
-  address: yup
-    .string()
-    .required("Address is required")
-    .min(5, "Address must be at least 5 characters")
-    .max(200, "Address cannot exceed 200 characters"),
-});
 
 const Technicians = () => {
   const [technicians, setTechnicians] = useState([]);
@@ -44,47 +10,105 @@ const Technicians = () => {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Initialize react-hook-form
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    resolver: yupResolver(technicianSchema),
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+  const [formErrors, setFormErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
   });
 
   const fetchTechnicians = async () => {
     try {
-      console.log("Fetching technicians from API");
       const response = await axios.get("http://localhost:5000/api/admin/technicians");
-      console.log("API Response:", response.data);
       setTechnicians(response.data.data);
-      setFilteredTechnicians(response.data.data); // Initialize filtered list
+      setFilteredTechnicians(response.data.data);
       setLoading(false);
     } catch (err) {
-      console.error("Fetch error:", err.response ? err.response.data : err.message);
       setError("Failed to load technicians: " + (err.response?.data?.message || err.message));
       setLoading(false);
     }
   };
 
-  const handleAddTechnician = async (data) => {
+  const validateForm = async () => {
+    const errors = {};
+    let isValid = true;
+
+    // First Name validation
+    if (!formData.firstName.trim()) {
+      errors.firstName = "First name is required";
+      isValid = false;
+    } else if (formData.firstName.length < 2) {
+      errors.firstName = "First name must be at least 2 characters";
+      isValid = false;
+    }
+
+    // Last Name validation
+    if (!formData.lastName.trim()) {
+      errors.lastName = "Last name is required";
+      isValid = false;
+    } else if (formData.lastName.length < 2) {
+      errors.lastName = "Last name must be at least 2 characters";
+      isValid = false;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+      isValid = false;
+    } else if (!emailRegex.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+      isValid = false;
+    }
+
+    // Phone validation
+    const phoneRegex = /^\+?[\d\s-]{10,}$/;
+    if (!formData.phone.trim()) {
+      errors.phone = "Phone number is required";
+      isValid = false;
+    } else if (!phoneRegex.test(formData.phone)) {
+      errors.phone = "Please enter a valid phone number";
+      isValid = false;
+    }
+
+    // Address validation
+    if (!formData.address.trim()) {
+      errors.address = "Address is required";
+      isValid = false;
+    } else if (formData.address.length < 5) {
+      errors.address = "Address must be at least 5 characters";
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
+  const handleAddTechnician = async (e) => {
+    e.preventDefault();
+    const isValid = await validateForm();
+    
+    if (!isValid) return;
+
     try {
-      console.log("Adding technician:", data);
-      const response = await axios.post("http://localhost:5000/api/admin/technicians", data);
-      console.log("Add Technician Response:", response.data);
-      reset(); // Reset form after successful submission
+      await axios.post("http://localhost:5000/api/admin/technicians", formData);
+      setFormData({ firstName: "", lastName: "", email: "", phone: "", address: "" });
+      setFormErrors({ firstName: "", lastName: "", email: "", phone: "", address: "" });
       setShowForm(false);
-      await fetchTechnicians(); // Refresh the list
+      await fetchTechnicians();
     } catch (err) {
-      console.error("Add technician error:", err.response ? err.response.data : err.message);
       setError("Failed to add technician: " + (err.response?.data?.message || err.message));
     }
   };
 
-  // Debounced search function
   const handleSearch = useMemo(
     () =>
       debounce((query) => {
@@ -102,32 +126,35 @@ const Technicians = () => {
     [technicians]
   );
 
-  // Update search query and trigger search
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
     handleSearch(query);
   };
 
-  // Clear search
   const clearSearch = () => {
     setSearchQuery("");
     setFilteredTechnicians(technicians);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   useEffect(() => {
     fetchTechnicians();
   }, []);
 
-  // Cleanup debounce on component unmount
   useEffect(() => {
     return () => {
       handleSearch.cancel();
     };
   }, [handleSearch]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  if (error) return <div className="text-red-500 text-center p-4">{error}</div>;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -138,7 +165,7 @@ const Technicians = () => {
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setShowForm(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
             >
               Add New Employee
             </button>
@@ -146,7 +173,6 @@ const Technicians = () => {
           </div>
         </header>
 
-        {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">
             <input
@@ -172,136 +198,30 @@ const Technicians = () => {
         {showForm && (
           <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">Add New Employee</h2>
-            <form onSubmit={handleSubmit(handleAddTechnician)} className="space-y-4">
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700">First Name</label>
-                <input
-                  type="text"
-                  {...register("firstName")}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10 ${
-                    errors.firstName ? "border-red-500" : ""
-                  }`}
-                  aria-invalid={errors.firstName ? "true" : "false"}
-                  aria-describedby={errors.firstName ? "firstName-error" : undefined}
-                />
-                {errors.firstName && (
-                  <span
-                    className="absolute right-2 top-9 text-red-400 text-sm opacity-70 italic pointer-events-none"
-                    aria-hidden="true"
-                  >
-                    {errors.firstName.message}
-                  </span>
-                )}
-                {errors.firstName && (
-                  <p id="firstName-error" className="mt-1 text-sm text-red-600">
-                    {errors.firstName.message}
-                  </p>
-                )}
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                <input
-                  type="text"
-                  {...register("lastName")}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10 ${
-                    errors.lastName ? "border-red-500" : ""
-                  }`}
-                  aria-invalid={errors.lastName ? "true" : "false"}
-                  aria-describedby={errors.lastName ? "lastName-error" : undefined}
-                />
-                {errors.lastName && (
-                  <span
-                    className="absolute right-2 top-9 text-red-400 text-sm opacity-70 italic pointer-events-none"
-                    aria-hidden="true"
-                  >
-                    {errors.lastName.message}
-                  </span>
-                )}
-                {errors.lastName && (
-                  <p id="lastName-error" className="mt-1 text-sm text-red-600">
-                    {errors.lastName.message}
-                  </p>
-                )}
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input
-                  type="email"
-                  {...register("email")}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10 ${
-                    errors.email ? "border-red-500" : ""
-                  }`}
-                  aria-invalid={errors.email ? "true" : "false"}
-                  aria-describedby={errors.email ? "email-error" : undefined}
-                />
-                {errors.email && (
-                  <span
-                    className="absolute right-2 top-9 text-red-400 text-sm opacity-70 italic pointer-events-none"
-                    aria-hidden="true"
-                  >
-                    {errors.email.message}
-                  </span>
-                )}
-                {errors.email && (
-                  <p id="email-error" className="mt-1 text-sm text-red-600">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700">Phone</label>
-                <input
-                  type="tel"
-                  {...register("phone")}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10 ${
-                    errors.phone ? "border-red-500" : ""
-                  }`}
-                  aria-invalid={errors.phone ? "true" : "false"}
-                  aria-describedby={errors.phone ? "phone-error" : undefined}
-                />
-                {errors.phone && (
-                  <span
-                    className="absolute right-2 top-9 text-red-400 text-sm opacity-70 italic pointer-events-none"
-                    aria-hidden="true"
-                  >
-                    {errors.phone.message}
-                  </span>
-                )}
-                {errors.phone && (
-                  <p id="phone-error" className="mt-1 text-sm text-red-600">
-                    {errors.phone.message}
-                  </p>
-                )}
-              </div>
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700">Address</label>
-                <input
-                  type="text"
-                  {...register("address")}
-                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10 ${
-                    errors.address ? "border-red-500" : ""
-                  }`}
-                  aria-invalid={errors.address ? "true" : "false"}
-                  aria-describedby={errors.address ? "address-error" : undefined}
-                />
-                {errors.address && (
-                  <span
-                    className="absolute right-2 top-9 text-red-400 text-sm opacity-70 italic pointer-events-none"
-                    aria-hidden="true"
-                  >
-                    {errors.address.message}
-                  </span>
-                )}
-                {errors.address && (
-                  <p id="address-error" className="mt-1 text-sm text-red-600">
-                    {errors.address.message}
-                  </p>
-                )}
-              </div>
+            <div className="space-y-4">
+              {["firstName", "lastName", "email", "phone", "address"].map((field) => (
+                <div key={field}>
+                  <label className="block text-sm font-medium text-gray-700">
+                    {field.charAt(0).toUpperCase() + field.slice(1)}
+                  </label>
+                  <input
+                    type={field === "email" ? "email" : field === "phone" ? "tel" : "text"}
+                    name={field}
+                    value={formData[field]}
+                    onChange={handleInputChange}
+                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                      formErrors[field] ? "border-red-500" : ""
+                    }`}
+                  />
+                  {formErrors[field] && (
+                    <p className="mt-1 text-sm text-red-500">{formErrors[field]}</p>
+                  )}
+                </div>
+              ))}
               <div className="flex space-x-4">
                 <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                  onClick={handleAddTechnician}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
                   Add Employee
                 </button>
@@ -309,14 +229,15 @@ const Technicians = () => {
                   type="button"
                   onClick={() => {
                     setShowForm(false);
-                    reset();
+                    setFormData({ firstName: "", lastName: "", email: "", phone: "", address: "" });
+                    setFormErrors({ firstName: "", lastName: "", email: "", phone: "", address: "" });
                   }}
                   className="text-gray-600 hover:text-gray-900"
                 >
                   Cancel
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         )}
 
