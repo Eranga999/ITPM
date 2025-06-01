@@ -58,8 +58,7 @@
 ---
 
 ## 📸 Screenshots
-
-![image](https://github.com/user-attachments/assets/79355574-a872-4f72-9c62-12d80a28f7c8)![image](https://github.com/user-attachments/assets/22554168-ac50-43f5-a331-e88560f63f69)
+[image](https://github.com/user-attachments/assets/22554168-ac50-43f5-a331-e88560f63f69)
 er-attachments/assets/a6d8ed9a-d813-4a98-880a-40941c47b757)
 ![chrome-capture-2025-6-1 (2)](https://github.com/user-attachments/assets/425e6409-da97-4a58-b41b-4ea21a8d7d1c)
 ![image](https://github.com/user-attachments/assets/fe5c5959-5d5f-458e-89d7-4cd4af9317d8)
