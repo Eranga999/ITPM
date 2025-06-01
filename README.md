@@ -21,7 +21,6 @@
 ### Additional Tools
 - **JWT **: Manages authentication and session security.
 - **Stripe** (or **Razorpay**): Facilitates secure digital payments.
-- **Socket.IO**: Enables real-time communication for service tracking.
 
 ---
 
