@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/79355574-a872-4f72-9c62-12d80a28f7c8)# 🛠️ Easy Fix – Streamlining Appliance Repairs
+# 🛠️ Easy Fix – Streamlining Appliance Repairs
 
 **Easy Fix** is a comprehensive web application designed to connect customers with verified technicians, offering efficient and transparent appliance repair services.
 
@@ -59,9 +59,7 @@
 
 ## 📸 Screenshots
 
-//todo
-![image](https://github.com/user-attachments/assets/22554168-ac50-43f5-a331-e88560f63f69)
-
+![image](https://github.com/user-attachments/assets/79355574-a872-4f72-9c62-12d80a28f7c8)![image](https://github.com/user-attachments/assets/22554168-ac50-43f5-a331-e88560f63f69)
 ![image](https://github.com/us![chrome-capture-2025-6-1 (3)](https://github.com/user-attachments/assets/306f43ff-7783-44fa-b9c3-b1adda86be31)
 er-attachments/assets/a6d8ed9a-d813-4a98-880a-40941c47b757)
 ![chrome-capture-2025-6-1 (2)](https://github.com/user-attachments/assets/425e6409-da97-4a58-b41b-4ea21a8d7d1c)
