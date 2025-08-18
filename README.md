@@ -20,9 +20,6 @@ https://github.com/user-attachments/assets/ed84baf8-87cb-4ce7-9490-dc7bf615184b
 - **Tailwind CSS**: Ensures a sleek and modern design.
 - **YouTube Embed API**: Integrates video tutorials within the Instant Fix Mode.
 
-### Additional Tools
-- **JWT **: Manages authentication and session security.
-- **Stripe** (or **Razorpay**): Facilitates secure digital payments.
 
 ---
 
